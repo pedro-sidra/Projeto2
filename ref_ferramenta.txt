@@ -1,0 +1,41 @@
+'VB Code Start
+'-------------------
+CurrentFeed = GetOemDRO(818)
+DoSpinStop()
+
+ZMove = 20.00 'Total lenght of Probe to move before Stop or no Contact Made.
+ZOffset = 1.60 ' Plate Hight
+ZSal = ZOffset + 2.00 '+ Free Hight, Will possition the Proble 2 MM over the Material.
+
+StopZmove = 0
+If GetOemLed (825)=0 Then
+DoOEMButton (1010)
+Code "G4 P2.5"
+Code "G31 Z-"& ZMove & "F25"
+While IsMoving()
+Sleep(200)
+Wend
+Probepos = GetVar(2002)
+If Probepos = - ZMove Then
+responce = MsgBox ("**ERROR** " , 4 , "Probe **ERROR**" )
+Code "G0 Z10"
+StopZmove = 1
+Code "F" &CurrentFeed
+End If
+If StopZmove = 0 Then
+Code "G0 Z" & Probepos
+While IsMoving ()
+Sleep (200)
+Wend
+Call SetDro (2, ZOffset)
+Code "G4 P1"
+Code "G0 Z" & ZSal
+Code "(Z zeroed)"
+Code "F" &CurrentFeed
+End If
+Else
+Code "(Check Ground Probe)"
+End If
+Exit Sub
+'-------------------
+'VB Code Stop
