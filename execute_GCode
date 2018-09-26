@@ -1,0 +1,6 @@
+LoadFile("C:\Mach3\roadrunner.tap")
+ While IsLoading()     'Wait until LoadFile is done.
+Wend
+RunFile() 
+sleep(1000)
+DoOEMButton(1000)  
