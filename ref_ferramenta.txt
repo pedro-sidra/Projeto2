@@ -17,7 +17,7 @@ Sleep(200)
 Wend
 Probepos = GetVar(2002)
 If Probepos = - ZMove Then
-responce = MsgBox ("**ERROR** " , 4 , "Probe **ERROR**" )
+response = MsgBox ("**ERROR** " , 4 , "Probe **ERROR**" )
 Code "G0 Z10"
 StopZmove = 1
 Code "F" &CurrentFeed
