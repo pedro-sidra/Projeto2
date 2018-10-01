@@ -50,132 +50,30 @@ Point VRangeRed(116,180);
 int threshBlack =40;
 
 // Isolates the red area defining the reference object
-void getRedArea(Mat &src, Mat &dst)
-{
-	// Converts to HSV to handle color more easily
-	cvtColor(src,dst,COLOR_BGR2HSV);
-	// Segments only the red areas of the image
-	inRange(src,
-			Scalar(HRangeRed.x,SrangeRed.x,VRangeRed.x),
-			Scalar(HRangeRed.y,SrangeRed.y,VRangeRed.y),
-			dst);
-	// Gets a elliptical structure for morphological opening
-	// and closing
-	Mat element = getStructuringElement(MORPH_ELLIPSE,Size(5,5));
-	// Morphologically opens and closes the binary image
-	// this eliminates small holes within and outside
-	// of the interest objects
-	morphologyEx(dst,dst,MORPH_OPEN, element);
-	morphologyEx(dst,dst,MORPH_CLOSE, element);
-}
+void getRedArea(Mat &src, Mat &dst);
 
 // Segments the black areas in the source image
-void getBlackArea(Mat &src, Mat &dest)
-{
-	// Converts to gray scale to handle black levels more easily
-	cvtColor(src,dest,COLOR_BGR2GRAY);
-	// Apllies threshold to convert to binary image
-	threshold(dest, dest, threshBlack,255, THRESH_BINARY);
-	// Morphologically opens and closes the image
-	// this eliminates small holes within and outside
-	// of the interest objects
-	Mat element = getStructuringElement(MORPH_ELLIPSE,Size(5,5));
-	morphologyEx(dest,dest,MORPH_OPEN, element);
-	morphologyEx(dest,dest,MORPH_CLOSE, element);
-}
+void getBlackArea(Mat &src, Mat &dest);
 
 // Creates trackbars to calibrate threshold values for red and black
-void createTrackbars()
-{
-	createTrackbar("H Max Value","Result", &HRangeRed.y,359);
-	createTrackbar("H Min Value","Result", &HRangeRed.x,359);
-
-	createTrackbar("S Max Value","Result", &SrangeRed.y,180);
-	createTrackbar("S Min Value","Result", &SrangeRed.x,180);
-
-	createTrackbar("V Max Value","Result", &VRangeRed.y,180);
-	createTrackbar("V Min Value","Result", &VRangeRed.x,180);
-
-	createTrackbar("Black Max","Result", &threshBlack,180);
-}
+void createTrackbars();
 
 // function for sorting the points by their "top-leftedness"
 // the heuristic is that the distance between the top-left point
 // and all other points has x>0
-// the sort function is used so the top-left point comes first
-// in the vector
-bool sortLeftPoint(Point a, Point b)
-{
-	return (b-a).x>0;
-}
+bool sortLeftPoint(Point a, Point b);
 
 // Finds the reference object in the image and outputs
 // a rect containing its coordinates
-void findReference(Mat &image, Rect & output)
-{
-	// contour vector 
-	// and hierarchy vector for the red contours in the image
-	vector<vector<Point> > contoursRed;
-	// Hierarchy represents if an object is inside another object
-	vector<Vec4i> hierarchyRed;
-	// binary image containing the red regions
-	Mat redThresh;
-	// Separate red area
-	getRedArea(image, redThresh);
-	// Find contours in the red area (we presume there's only one,
-	// which is the red reference object)
-	findContours(redThresh, contoursRed, hierarchyRed,
-			CV_RETR_TREE,
-			CV_CHAIN_APPROX_SIMPLE);
-	output = boundingRect(contoursRed[0]);
-}
+void findReference(Mat &image, Rect & output);
 
 // Finds the black workpiece in an image
-void findPiece(Mat &image,vector<Point> &workpiece)
-{
-	// contour vector 
-	// and hierarchy vector for the black contours in the image
-	vector<vector<Point> > contoursBlack;
-	vector<Vec4i> hierarchyBlack;
+void findPiece(Mat &image,vector<Point> &workpiece);
 
-	// generate a binary image containing the black regions
-	Mat blackThresh;
-	getBlackArea(image, blackThresh);
-	
-	// Find all black contours in the image
-	findContours(blackThresh, contoursBlack, hierarchyBlack,
-			CV_RETR_TREE,
-			CV_CHAIN_APPROX_SIMPLE);
-	// Loop through all contours to filter them
-	// (since there are multiple black contours, we 
-	// need to find the rectangular one which is our object)
-	for (size_t i = 0; i < contoursBlack.size(); ++i)
-	{
-		vector <Point> polyApprox;
-		// approximate the shape by a simplified closed polygon
-		// with 8-pixel precision
-		approxPolyDP(contoursBlack[i],
-				polyApprox,
-				8,
-				true);
-		// if the polygon is a quadrilateral, it's our workpiece
-		// (this is obviously not robust and is a stand-in)
-		if( polyApprox.size() ==4)
-			workpiece = polyApprox;
-	}	
-}
 // Find the workpiece position relative to the red reference
 // object. 
-Point findRelativeWorkpiecePosition(Rect &redRef, vector<Point> workpiece)
-{
-	// this is used to find the top-left corner of the object
-	sort (workpiece.begin(),workpiece.end(),sortLeftPoint);
-	// Find the distance between the bottom-right corner of
-	// the reference and the top-left corner of the workpiece.
-	Point brRed = redRef.br();
-	Point tlBlack = workpiece[0];
-	return tlBlack-brRed;
-}
+Point findRelativeWorkpiecePosition(Rect &redRef, vector<Point> workpiece);
+
 
 int main(int argc, char** argv )
 {
@@ -230,4 +128,115 @@ int main(int argc, char** argv )
 		imshow("Display Image", image);
 	}
 	return 0;
+}
+
+// --> Definitions:
+Point findRelativeWorkpiecePosition(Rect &redRef, vector<Point> workpiece)
+{
+	// this is used to find the top-left corner of the object
+	sort (workpiece.begin(),workpiece.end(),sortLeftPoint);
+	// Find the distance between the bottom-right corner of
+	// the reference and the top-left corner of the workpiece.
+	Point brRed = redRef.br();
+	Point tlBlack = workpiece[0];
+	return tlBlack-brRed;
+}
+void findPiece(Mat &image,vector<Point> &workpiece)
+{
+	// contour vector 
+	// and hierarchy vector for the black contours in the image
+	vector<vector<Point> > contoursBlack;
+	vector<Vec4i> hierarchyBlack;
+
+	// generate a binary image containing the black regions
+	Mat blackThresh;
+	getBlackArea(image, blackThresh);
+	
+	// Find all black contours in the image
+	findContours(blackThresh, contoursBlack, hierarchyBlack,
+			CV_RETR_TREE,
+			CV_CHAIN_APPROX_SIMPLE);
+	// Loop through all contours to filter them
+	// (since there are multiple black contours, we 
+	// need to find the rectangular one which is our object)
+	for (size_t i = 0; i < contoursBlack.size(); ++i)
+	{
+		vector <Point> polyApprox;
+		// approximate the shape by a simplified closed polygon
+		// with 8-pixel precision
+		approxPolyDP(contoursBlack[i],
+				polyApprox,
+				8,
+				true);
+		// if the polygon is a quadrilateral, it's our workpiece
+		// (this is obviously not robust and is a stand-in)
+		if( polyApprox.size() ==4)
+			workpiece = polyApprox;
+	}	
+}
+void findReference(Mat &image, Rect & output)
+{
+	// contour vector 
+	// and hierarchy vector for the red contours in the image
+	vector<vector<Point> > contoursRed;
+	// Hierarchy represents if an object is inside another object
+	vector<Vec4i> hierarchyRed;
+	// binary image containing the red regions
+	Mat redThresh;
+	// Separate red area
+	getRedArea(image, redThresh);
+	// Find contours in the red area (we presume there's only one,
+	// which is the red reference object)
+	findContours(redThresh, contoursRed, hierarchyRed,
+			CV_RETR_TREE,
+			CV_CHAIN_APPROX_SIMPLE);
+	output = boundingRect(contoursRed[0]);
+}
+bool sortLeftPoint(Point a, Point b)
+{
+	return (b-a).x>0;
+}
+void createTrackbars()
+{
+	createTrackbar("H Max Value","Result", &HRangeRed.y,359);
+	createTrackbar("H Min Value","Result", &HRangeRed.x,359);
+
+	createTrackbar("S Max Value","Result", &SrangeRed.y,180);
+	createTrackbar("S Min Value","Result", &SrangeRed.x,180);
+
+	createTrackbar("V Max Value","Result", &VRangeRed.y,180);
+	createTrackbar("V Min Value","Result", &VRangeRed.x,180);
+
+	createTrackbar("Black Max","Result", &threshBlack,180);
+}
+void getBlackArea(Mat &src, Mat &dest)
+{
+	// Converts to gray scale to handle black levels more easily
+	cvtColor(src,dest,COLOR_BGR2GRAY);
+	// Apllies threshold to convert to binary image
+	threshold(dest, dest, threshBlack,255, THRESH_BINARY);
+	// Morphologically opens and closes the image
+	// this eliminates small holes within and outside
+	// of the interest objects
+	Mat element = getStructuringElement(MORPH_ELLIPSE,Size(5,5));
+	morphologyEx(dest,dest,MORPH_OPEN, element);
+	morphologyEx(dest,dest,MORPH_CLOSE, element);
+}
+void getRedArea(Mat &src, Mat &dst)
+{
+	// Converts to HSV to handle color more easily
+	cvtColor(src,dst,COLOR_BGR2HSV);
+	// Segments only the red areas of the image
+	inRange(src,
+			Scalar(HRangeRed.x,SrangeRed.x,VRangeRed.x),
+			Scalar(HRangeRed.y,SrangeRed.y,VRangeRed.y),
+			dst);
+	// Gets a elliptical structure for morphological opening
+	// and closing
+	Mat element = getStructuringElement(MORPH_ELLIPSE,Size(5,5));
+	// Morphologically opens and closes the binary image
+	// this eliminates small holes within and outside
+	// of the interest objects
+	morphologyEx(dst,dst,MORPH_OPEN, element);
+	morphologyEx(dst,dst,MORPH_CLOSE, element);
 }
