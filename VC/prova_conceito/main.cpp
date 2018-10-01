@@ -122,7 +122,7 @@ int main(int argc, char** argv )
 
 		// Calculate the magnitude of the distance and show it
 		double workPieceDistance = cmPerPixel*norm(relativePosition);
-		putText(image, "Distancia medida: " + to_string(workPieceDistance) + " cm" , Point (10,20), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255,255,255));
+		putText(image, "Distancia medida: " + to_string(workPieceDistance) + " cm" , Point (10,600), FONT_HERSHEY_SIMPLEX, 3, Scalar(255,255,255));
 
 		// Display resulting image
 		imshow("Display Image", image);
