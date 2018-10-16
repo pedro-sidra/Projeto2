@@ -1,6 +1,36 @@
 import numpy as np
 import cv2
 
+def findCorner(image):
+    # Converte para grayscale se necessário
+    if image.shape[2] == 3:
+        gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
+    else:
+        gray = image
+
+    gray = np.float32(gray)
+    
+    # Obtém os cantos
+    dst = cv2.cornerHarris(gray,2,3,0.04)
+    dst = cv2.dilate(dst,None)
+    ret, dst = cv2.threshold(dst,0.01*dst.max(),255,0)
+    dst = np.uint8(dst)
+
+    # Encontra os centróides dos cantos obtidos
+    ret, labels, stats, centroids = cv2.connectedComponentsWithStats(dst)
+
+    # A partir dos centróides, obtém um canto 
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.001)
+    corners = cv2.cornerSubPix(gray,np.float32(centroids),(5,5),(-1,-1),criteria)
+    # Desenha os cantos
+    res = np.hstack((centroids,corners))
+    res = np.int0(res)
+    image[res[:,1],res[:,0]]=[0,0,255]
+    image[res[:,3],res[:,2]] = [0,255,0]
+
+    return corners
+        
+
 # Obtém uma máscara que separa os objetos vermelhos (objeto de referência)
 def getRedArea(image):
     # Define os limites para filtragem do vermelho
@@ -58,7 +88,7 @@ def findReference(image):
 
 
 # Encontra a peça
-def findPiece(image):
+def findPiece(image, margin):
     # Obtém o filtro para objetos pretos
     thresh = getBlackArea(image)
     
@@ -68,6 +98,7 @@ def findPiece(image):
     areaWorkpiece = 0
     
     # Itera os contornos obtidos
+
     for i in range(0, len(contoursBlack)):
         # Aplica uma aproximação polinomial nos contornos
         polyApprox = cv2.approxPolyDP(contoursBlack[i],8,True)
@@ -79,20 +110,30 @@ def findPiece(image):
                 workpiece = polyApprox
                 areaWorkpiece = cv2.contourArea(workpiece)
     
-    cv2.drawContours(image, [workpiece], -1, (0,255,0), 1)    
+    xmin = min(workpiece[:,0,0])-margin
+    xmax = max(workpiece[:,0,0])+margin
+    ymin = min(workpiece[:,0,1])-margin
+    ymax = max(workpiece[:,0,1])+margin
 
-    return workpiece
+    workpieceImage = image[ymin:ymax,xmin:xmax]
+    
+    #cv2.drawContours(image, [workpiece], -1, (0,255,0), 1)    
+    corners = findCorner(workpieceImage)
+    corners[:,0]+=xmin
+    corners[:,1]+=ymin
+    '''cv2.imshow('image',image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows(workpieceImage)
+    '''
+    return corners
 
 # Encontra a distância entre o vértice inferior direito da referência e
 # o vértice superior esquerdo da peça, em pixels
 def findRelativeWorkpiecePosition(workpiece, reference):
-    x_pos=[]
-    y_pos=[]
+    
+    x_pos=workpiece[:,0]
+    y_pos=workpiece[:,1]
 
-    # Itera sob as coordenadas do vetor workpiece e separa as coordenadas x e y
-    for i in range(len(workpiece)):
-        x_pos.append(workpiece[i][0][0])
-        y_pos.append(workpiece[i][0][1])
     
     # Converte a referência da forma ( centro (x,y), (largura, altura), ângulo de rotação)
     # para a forma de um vetor com as coordenadas dos vértices
@@ -100,13 +141,16 @@ def findRelativeWorkpiecePosition(workpiece, reference):
     reference = np.int0(reference)
 
     # Encontra a posição do vértice mais à esquerda da peça
-    leftIndex = x_pos.index(min(x_pos))
-    leftMost = [x_pos[leftIndex],y_pos[leftIndex]]
-
+    leftIndex = np.argmin(x_pos)
+    print(leftIndex)
+    leftMost = workpiece[leftIndex]
+    
     # Sabe-se que o vértice de interesse está na posição 3 do vetor
     referencePoint = reference[3]
-
-    relativePosition = leftMost-referencePoint
+    print(leftMost)
+    print(referencePoint)
+    relativePosition = (leftMost-referencePoint)
+   
     cv2.line(image, (referencePoint[0],referencePoint[1]),(leftMost[0],leftMost[1]), (255,0,0) ,1 )
     return relativePosition
 
@@ -116,7 +160,7 @@ threshBlack = 40
 
 image= cv2.imread('/home/hanel/Projeto2/VC/prova_conceito_py/img.jpeg',cv2.IMREAD_COLOR)
 
-workpiece = findPiece(image)
+workpiece = findPiece(image, 20)
 reference = findReference(image)
 referenceWidth = reference[1][0]
 referenceHeight = reference[1][1]
