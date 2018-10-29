@@ -32,16 +32,20 @@ def main():
     # Limpa o arquivo, e espera o Mach3 dar um ok
     gc.cleanFile()
     gc.getInitialCode()
+    gc.moveLinear(Point(2,2,2), feed_rate=500)
     waitForOK()
     
     # Manda um movimento, e espera o Mach3 dar um ok
+    gc.cleanFile()
     gc.getInitialCode()
     gc.moveLinear(Point(0,0,0), feed_rate=500)
     waitForOK()
 
     # Manda outro movimento, espera o mach3 dar ok
     gc.cleanFile()
-    gc.moveLinear(Point(10,10,10),feed_rate = 1000)
+    gc.getInitialCode()
+
+    gc.moveLinear(Point(1,1,1),feed_rate = 1000)
     waitForOK()
 
 
