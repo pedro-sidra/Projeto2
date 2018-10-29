@@ -1,0 +1,56 @@
+LoadFile("C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\out.g")
+
+While IsLoading()     'Wait until LoadFile is done.
+Wend
+
+RunFile() 
+sleep(1000)
+DoOEMButton(1000) 
+ 
+While isMoving()
+Sleep 100
+Wend
+
+Open "C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\fromMach3.txt" For Output As #1 ' Open file.
+Print #1, "ok" ' Write string to file.
+Close
+Sleep(1000)
+
+LoadFile("C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\out.g")
+
+While IsLoading()     'Wait until LoadFile is done.
+Wend
+
+RunFile() 
+sleep(1000)
+DoOEMButton(1000) 
+ 
+While isMoving()
+Sleep 100
+Wend
+
+
+Open "C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\fromMach3.txt" For Output As #1 ' Open file.
+Print #1, "ok" ' Write string to file.
+Close
+Sleep(1000)
+
+LoadFile("C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\out.g")
+
+While IsLoading()     'Wait until LoadFile is done.
+Wend
+
+RunFile() 
+sleep(1000)
+DoOEMButton(1000) 
+ 
+While isMoving()
+Sleep 100
+Wend
+
+
+Open "C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\fromMach3.txt" For Output As #1 ' Open file.
+Print #1, "ok" ' Write string to file.
+Close
+Sleep(1000)
+

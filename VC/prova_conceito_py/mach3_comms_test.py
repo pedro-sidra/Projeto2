@@ -1,6 +1,7 @@
-import numpy as np
 from GCodeGenerator import *
+import numpy as np
 import time
+import cv2
 
 # Teste de comunicacao com o Mach3!
 
@@ -13,8 +14,8 @@ def waitForOK():
     while not receivedOk:
         with open('fromMach3.txt','r') as fFromMach3:
             text = fFromMach3.readline()
-            print(text)
-        time.sleep(1)
+            print('text ' + text)
+            time.sleep(0.3)
         if text == 'ok\n':
             receivedOk=True
             open('fromMach3.txt','w').close()
@@ -30,6 +31,7 @@ def main():
 
     # Limpa o arquivo, e espera o Mach3 dar um ok
     gc.cleanFile()
+    gc.getInitialCode()
     waitForOK()
     
     # Manda um movimento, e espera o Mach3 dar um ok
