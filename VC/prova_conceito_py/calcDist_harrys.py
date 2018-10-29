@@ -116,7 +116,7 @@ upper_piece = np.array([28,255,73])
 lower_reference = np.array([0,157,87])
 upper_reference = np.array([15,255,255])
 
-image= cv2.imread('/home/hanel/Projeto2/VC/prova_conceito_py/img.jpeg',cv2.IMREAD_COLOR)
+image= cv2.imread('/home/freitas/Code/Projeto2/VC/prova_conceito_py/img.jpeg',cv2.IMREAD_COLOR)
 
 workpiece = findPiece(image, 20, lower_piece, upper_piece)
 reference = findPiece(image, 20, lower_reference, upper_reference)

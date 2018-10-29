@@ -114,7 +114,7 @@ def findRelativeWorkpiecePosition(workpiece, reference):
 
 threshBlack = 40
 
-image= cv2.imread('/home/hanel/Projeto2/VC/prova_conceito_py/img.jpeg',cv2.IMREAD_COLOR)
+image= cv2.imread('/home/freitas/Downloads/mesa.jpeg',cv2.IMREAD_COLOR)
 
 workpiece = findPiece(image)
 reference = findReference(image)
