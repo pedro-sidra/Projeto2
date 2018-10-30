@@ -1,28 +1,45 @@
-Dim i
+Dim compok
+Dim compexit
+compok = 1
+compexit = 1
 
-For i = 1 To 3
+While compexit <> 0
+	
+	Open "C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\toMach3.txt" For Input As #1 ' Open file.
+	Line Input #1, TextLine ' Read line into variable. 
+	Close #1
+	
+	compok = StrComp("ok",TextLine)
+	compexit = StrComp("exit",TextLine)
+	
+	If compok = 0 Then
+	
+		LoadFile("C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\out.tap")
 
-LoadFile("C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\out.tap")
+		While IsLoading()     'Wait until LoadFile is done.
+		Wend
+		
+		RunFile() 
+		sleep(500)
+		DoOEMButton(1000) 
+		 
+		While isMoving()
+			Sleep 100
+		Wend
+		DoOEMButton(169)
+		
+		sleep(500)
+		
+		Open "C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\fromMach3.txt" For Output As #1 ' Open file.
+		Print #1, "ok" ' Write string to file.
+		Close
+	
+	End If 
+	Sleep(1000)
 
-While IsLoading()     'Wait until LoadFile is done.
 Wend
+MsgBox "Done"
 
-RunFile() 
-sleep(500)
-DoOEMButton(1000) 
- 
-While isMoving()
-Sleep 100
-Wend
-DoOEMButton(169)
 
-sleep(500)
-
-Open "C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\fromMach3.txt" For Output As #1 ' Open file.
-Print #1, "ok" ' Write string to file.
-Close
-Sleep(1000)
-
-Next i
 
 
