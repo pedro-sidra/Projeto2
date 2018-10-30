@@ -33,10 +33,10 @@ def waitForMach3():
     waitForOK()
     clearOK()
 
-# Comunicacao feita com arquivos de texto (aham...)
+# Comunicacao feita com arquivos de texto
 def main():
     
-    # gerador de codigo G (clauser <3)
+    # gerador de codigo G
     gc = GCodeGenerator(5)
 
     cap = cv2.VideoCapture(0)

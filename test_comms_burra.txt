@@ -1,37 +1,37 @@
-Dim compok
-Dim compexit
+Dim compok 'verifica se a String lida no arquivo é "ok"
+Dim compexit 'verifica se a String lida no arquivo é "exit"
 compok = 1
 compexit = 1
 
 While compexit <> 0
 	
-	Open "C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\toMach3.txt" For Input As #1 ' Open file.
-	Line Input #1, TextLine ' Read line into variable. 
-	Close #1
+	Open "C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\toMach3.txt" For Input As #1 ' abre arquivo.
+	Line Input #1, TextLine ' lê a linha e coloca na variavel TextLine. 
+	Close #1 ' fecha o arquivo
 	
 	compok = StrComp("ok",TextLine)
 	compexit = StrComp("exit",TextLine)
 	
-	If compok = 0 Then
+	If compok = 0 Then 'se a string for "ok"
 	
-		LoadFile("C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\out.tap")
+		LoadFile("C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\out.tap") 'carrega o código G
 
-		While IsLoading()     'Wait until LoadFile is done.
+		While IsLoading()
 		Wend
 		
-		RunFile() 
+		RunFile() 'Executa
 		sleep(500)
-		DoOEMButton(1000) 
+		DoOEMButton(1000) 'Pressiona o botão Cycle Start
 		 
-		While isMoving()
+		While isMoving() 'Trava a execução enquanto a CNC estiver executando instruções
 			Sleep 100
 		Wend
-		DoOEMButton(169)
+		DoOEMButton(169) 'Pressiona o botão close file
 		
 		sleep(500)
 		
 		Open "C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\fromMach3.txt" For Output As #1 ' Open file.
-		Print #1, "ok" ' Write string to file.
+		Print #1, "ok" ' escreve a string para o arquivo
 		Close
 	
 	End If 
