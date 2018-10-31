@@ -2,7 +2,6 @@ from GCodeGenerator import *
 import os
 import numpy as np
 import time
-import cv2
 
 # Teste de comunicacao com o Mach3!
 
@@ -33,13 +32,12 @@ def waitForMach3():
     waitForOK()
     clearOK()
 
-# Comunicacao feita com arquivos de texto
-def main():
+# Comunicacao feita com arquivos de texto (aham...)
+def sendGcodeAndWaitForMach3():
     
-    # gerador de codigo G
+    # gerador de codigo G (clauser <3)
     gc = GCodeGenerator(5)
 
-    cap = cv2.VideoCapture(0)
     # se der problema de acesso:if os.access("myfile", os.R_OK):
     open('fromMach3.txt','w').close()
     clearOK()
@@ -50,10 +48,6 @@ def main():
     gc.moveLinear(Point(40,40,40), feed_rate=500)
 
     waitForMach3()
-
-
-    _,img = cap.read()
-    cv2.imshow("hi", img)
 
     # Manda um movimento, e espera o Mach3 dar um ok
     gc.cleanFile()
@@ -68,6 +62,9 @@ def main():
     gc.moveLinear(Point(1,1,1),feed_rate = 1000)
 
     waitForMach3()
+
+def main():
+    sendGcodeAndWaitForMach3()
 
 if __name__ == "__main__":
     main()

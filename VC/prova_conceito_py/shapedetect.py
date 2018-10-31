@@ -158,9 +158,13 @@ def getMaskFromOptions(args, image):
 def parseArgs():
     # Parse arguments
     ap = argparse.ArgumentParser()
-    ap.add_argument("-i", "--image", required=True,
+    ap.add_argument("-i", "--image", required=False,
                 help="path to the input image")
+    ap.add_argument("-d", "--device", required=False,
+                type=int, default=0,
+                help="device to use")
     ap.add_argument("-t", "--type", required=False,
+                default="ada",
                 help="type of binarization")
     ap.add_argument("-b", "--block", required=False,
                 type=int,default=5,
@@ -236,13 +240,34 @@ def findPiece(mask, margin = None):
         ymin = min(workpiece[:,0,1])-margin
         ymax = max(workpiece[:,0,1])+margin
 
-        workpieceImage = image[ymin:ymax,xmin:xmax]
+        workpieceImage = mask[ymin:ymax,xmin:xmax]
         corners = findCorner(workpieceImage)
         corners[:,0]+=xmin
         corners[:,1]+=ymin
         return corners
     else:
         return workpiece
+
+def callibAndGetPiece(image, args):
+    
+    # Create trackbars window
+    cv2.namedWindow('Mask',cv2.WINDOW_AUTOSIZE)
+    createBinarizationTrackbars(args)
+
+    while True:
+        mask = getMaskFromOptions(args, image)
+        mask = morphCloseThenOpen(args, mask)
+
+        workpiece = findPiece(mask)
+        drawImage = image.copy()
+        cv2.drawContours(drawImage, [workpiece], -1, (0,255,0), 1)
+        cv2.imshow("Mask",mask)
+        cv2.imshow("Image",drawImage) 
+        key = cv2.waitKey(1) & 0xFF 
+        if key == 27:
+            break
+
+    return workpiece
 
 def main():
     
