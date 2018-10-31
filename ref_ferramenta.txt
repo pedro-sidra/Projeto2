@@ -3,32 +3,32 @@
 CurrentFeed = GetOemDRO(818)
 DoSpinStop()
 
-ZMove = 20.00 'Total lenght of Probe to move before Stop or no Contact Made.
-ZOffset = 1.60 ' Plate Hight
+ZMove = 80.00 'Total lenght of Probe to move before Stop or no Contact Made. (for tests only)
+ZOffset = 0.4 ' Plate Hight (still need fine adjust)
 ZSal = ZOffset + 2.00 '+ Free Hight, Will possition the Proble 2 MM over the Material.
 
-StopZmove = 0
+StopZmove = 0 'descobrir o que isso faz (nota pessoal pro giusti, depois tirar)
 If GetOemLed (825)=0 Then
 DoOEMButton (1010)
 Code "G4 P2.5"
-Code "G31 Z-"& ZMove & "F25"
+Code "G31 Z-"& ZMove & "F300" 'Fxx needs fine tuning
 While IsMoving()
 Sleep(200)
 Wend
-Probepos = GetVar(2002)
+Probepos = GetDro(2)
 If Probepos = - ZMove Then
 response = MsgBox ("**ERROR** " , 4 , "Probe **ERROR**" )
 Code "G0 Z10"
 StopZmove = 1
 Code "F" &CurrentFeed
 End If
-If StopZmove = 0 Then
-Code "G0 Z" & Probepos
+If StopZmove = 0 Then 'descobrir o que isso faz (nota pessoal pro giusti, depois tirar)
+Code "G0 Z" & Probepos 'descobrir o que isso faz (nota pessoal pro giusti, depois tirar)
 While IsMoving ()
 Sleep (200)
 Wend
-Call SetDro (2, ZOffset)
-Code "G4 P1"
+Call SetDro (2, ZOffset) 'verificar necessidade do uso do call
+Code "G4 P1" 'Pause the machine for a period of time. 
 Code "G0 Z" & ZSal
 Code "(Z zeroed)"
 Code "F" &CurrentFeed
