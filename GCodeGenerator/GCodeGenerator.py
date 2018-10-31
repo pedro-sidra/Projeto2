@@ -36,7 +36,7 @@ class Point(object):
 class GCodeGenerator(object):
 
     def __init__(self, tool_diameter: int, feed_rate: int = 1000, speed: int = 2000, angle_to_align: float = 0.0,
-                 output_method: OutputMethod = OutputMethod.FILE, output_file='out.g'):
+                 output_method: OutputMethod = OutputMethod.FILE, output_file='out.tap'):
 
         # Operation
         self.feed_rate = feed_rate

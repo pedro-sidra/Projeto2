@@ -95,17 +95,18 @@ def findRelativeWorkpiecePosition(workpiece, reference):
     relativePosition=100000
     bestI=0
     bestJ=0
-    for i in range((len(workpiece))):
-        for j in range((len(reference))):
-            newRelativePosition = (workpiece[i]-reference[j])
+    for workpiecePoint in workpiece:
+        for referencePoint in reference:
+            newRelativePosition = (workpiecePoint-referencePoint)
             if(np.linalg.norm(newRelativePosition)<np.linalg.norm(relativePosition)):
                 relativePosition = newRelativePosition
-                bestI=i
-                bestJ=j
+                bestWPoint = workpiecePoint
+                bestRPoint = referencePoint
             
-    cv2.line(image, (workpiece[bestI,0],workpiece[bestI,1]),(reference[bestJ,0],reference[bestJ,1]), (255,0,0) ,1 )
     
-    return relativePosition
+    return ( relativePosition, 
+            bestWPoint,
+            bestRPoint)
 
 
 #MAIN
@@ -116,7 +117,7 @@ upper_piece = np.array([28,255,73])
 lower_reference = np.array([0,157,87])
 upper_reference = np.array([15,255,255])
 
-image= cv2.imread('/home/freitas/Code/Projeto2/VC/prova_conceito_py/img.jpeg',cv2.IMREAD_COLOR)
+image= cv2.imread("img.jpeg",cv2.IMREAD_COLOR)
 
 workpiece = findPiece(image, 20, lower_piece, upper_piece)
 reference = findPiece(image, 20, lower_reference, upper_reference)
@@ -125,7 +126,10 @@ referenceWidth = 180.0
 referenceHeight = 130.0
 
 cmPerPixel = (5.0/referenceWidth + 7.0/referenceHeight)/2
-relativePosition = findRelativeWorkpiecePosition(workpiece, reference)
+print(workpiece)
+print(reference)
+relativePosition, P1, P2= findRelativeWorkpiecePosition(workpiece, reference)
+print(relativePosition[0])
 workpieceDistance = cmPerPixel*np.linalg.norm(relativePosition,2)
 
 cv2.putText(image, "Distancia medida: " + str(workpieceDistance)+ " cm", (10,600), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255))

@@ -1,8 +1,8 @@
 import cv2
+import time
 
 cap = cv2.VideoCapture(1)
-ret = cap.set(3,1280 );
-ret = cap.set(4,720);
+
 
 i=0
 

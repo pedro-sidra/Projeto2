@@ -222,6 +222,8 @@ def findPiece(mask, margin = None):
     areaWorkpiece = 0
     # Itera os contornos obtidos
 
+    workpiece = None
+
     for contour in contours:
         # Aplica uma aproximação polinomial nos contornos
         polyApprox = cv2.approxPolyDP(contour,8,True)
@@ -260,7 +262,8 @@ def callibAndGetPiece(image, args):
 
         workpiece = findPiece(mask)
         drawImage = image.copy()
-        cv2.drawContours(drawImage, [workpiece], -1, (0,255,0), 1)
+        if workpiece is not None:
+            cv2.drawContours(drawImage, [workpiece], -1, (0,255,0), 1)
         cv2.imshow("Mask",mask)
         cv2.imshow("Image",drawImage) 
         key = cv2.waitKey(1) & 0xFF 
@@ -287,7 +290,11 @@ def main():
 
         workpiece = findPiece(mask)
         drawImage = image.copy()
-        cv2.drawContours(drawImage, [workpiece], -1, (0,255,0), 1)
+        if workpiece is not None:
+            cv2.drawContours(drawImage, [workpiece], -1, (0,255,0), 1)
+            print(workpiece[0][0][0])
+            rect = cv2.minAreaRect(workpiece)
+            print(rect)
         cv2.imshow("Mask",mask)
         cv2.imshow("Image",drawImage) 
         key = cv2.waitKey(1) & 0xFF 

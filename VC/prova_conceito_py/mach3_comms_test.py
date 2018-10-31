@@ -45,21 +45,22 @@ def sendGcodeAndWaitForMach3():
     # Limpa o arquivo, manda um ok, e espera o Mach3 dar um ok
     gc.cleanFile()
     gc.getInitialCode()
-    gc.moveLinear(Point(40,40,40), feed_rate=500)
+    gc.moveLinear(Point(100,100,0), feed_rate=500)
+    gc.insertNewLine()
 
     waitForMach3()
 
     # Manda um movimento, e espera o Mach3 dar um ok
     gc.cleanFile()
-    gc.getInitialCode()
     gc.moveLinear(Point(0,0,0), feed_rate=500)
+    gc.insertNewLine()
 
     waitForMach3()
 
     # Manda outro movimento, espera o mach3 dar ok
     gc.cleanFile()
-    gc.getInitialCode()
-    gc.moveLinear(Point(1,1,1),feed_rate = 1000)
+    gc.moveLinear(Point(100,100,0),feed_rate = 1000)
+    gc.insertNewLine()
 
     waitForMach3()
 

@@ -30,7 +30,7 @@ def sendOK():
     
 def sendDone():
     with open('toMach3.txt','w') as fToMach3:
-        fToMach3.write('done')
+        fToMach3.write('exit')
 
 def clearOK():
     open('toMach3.txt','w').close()
@@ -60,8 +60,10 @@ def takePicturesWithMachine(picturePositions, desiredFeedRate=500, device:int = 
     # For each picture position...
     for pos in picturePositions:
         # Clear the file, set the code up and move to the position
-        gc.cleanFile
+        gc.cleanFile()
+        gc.getInitialCode()
         gc.moveLinear(pos, feed_rate = desiredFeedRate)
+        gc.insertNewLine()
 
         # Wait for mach3 to execute the desired movement
         waitForMach3()
@@ -70,7 +72,6 @@ def takePicturesWithMachine(picturePositions, desiredFeedRate=500, device:int = 
         _, picture = cap.read()
         picturesTaken.append(picture)
 
-    sendDone()
 
     return picturesTaken
 
@@ -109,30 +110,64 @@ def findRelativeWorkpiecePosition(workpiece, reference):
 def main():
     args = parseArgs()
     print(args)
-    pictures = takePicturesWithMachine([ Point(10,10,10), Point(0,0,0), Point(15,15,15) ], device=args["device"])
 
-    for pic in pictures:
-        cv2.imshow("Pic", pic)
-        cv2.waitKey()
+    picturePoints = [ 
+            Point(166,300,0),
+            Point(440,300,0)
+     ]
+
+    pictures = takePicturesWithMachine(picturePoints, device=args["device"])
+
+    #for pic in pictures:
+        #cv2.imshow("Pic", pic)
+        #cv2.waitKey()
 
     stitched = stitchImages(pictures, gambiarra=True)
 
-    cv2.imshow("Result of Stitch", stitched)
-    cv2.waitKey()
+    #cv2.imshow("Result of Stitch", stitched)
+    #cv2.waitKey()
 
     ref = shapedetect.callibAndGetPiece(stitched,{"type":"hsv", "block":3})
     piece = shapedetect.callibAndGetPiece(stitched,{"type":"hsv", "block":3})
 
-    relPos, pwork, pref = findRelativeWorkpiecePosition(workpiece=piece,reference=ref)
+    print (ref)
+    print(piece)
 
-    cv2.line(stitched, pwork, pref, (255,0,0) ,1 )
+    refWidthReal = 5 
+    refHeightReal = 3.8
 
-    gc = GCodeGenerator(5)
-    gc.cleanFile()
-    # MOVE ATE A POSICAO DA REF (CALIBRAR)
-    gc.moveLinear(Point(6,9,9))
-    # MOVE RELATIVO USANDO A RELPOS (NAO SEI CODIGO G)
-    gc.writeManualCodeToFile("Something")
+    p, size, angle = cv2.minAreaRect(ref)
+
+    mmPerPixel =(refWidthReal/size[0] + refHeightReal/size[1])*10/2
+
+
+    if ref is not None and piece is not None:
+        relPosPixels, pwork, pref = findRelativeWorkpiecePosition(workpiece=piece,reference=ref)
+
+        #cv2.line(stitched, (pwork[0],pwork[1]), (pref[0],pref[1]), (255,0,0) ,1 )
+        #cv2.imshow("Posicao Realtiva",stitched)
+
+        gc = GCodeGenerator(5)
+        gc.getInitialCode()
+        gc.moveLinear(Point(30,60,0))
+        gc.insertNewLine()
+        
+        waitForMach3()
+
+        gc.cleanFile()
+        gc.getInitialCode()
+        gc.enterRelativeMode()
+        print(relPosPixels)
+        relX = relPosPixels[0][1]* mmPerPixel
+        relY = relPosPixels[0][0]* mmPerPixel
+        gc.moveLinear(Point(relX, relY, 0))
+        gc.insertNewLine()
+        
+
+        waitForMach3()
+
+    else:
+        print("NAO DEU")
 
 if __name__ == "__main__":
     main()

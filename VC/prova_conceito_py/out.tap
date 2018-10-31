@@ -1,9 +1,9 @@
 ; Generated Code:
 ; Initial code to prepare machine and environment
-N013 G90
-N014 G21
-N015 G94
+N006 G90
+N007 G21
+N008 G94
+N009 G91
 ; Moving Linearly
-N016 G1 F1000
-N017 G1 X1.0 Y1.0 Z1.0 
-N018 
+N010 G1 F1000
+N011 G1 X264.3110624315443 Y7.2216137276378225 Z0.0

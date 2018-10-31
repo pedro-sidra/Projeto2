@@ -36,7 +36,7 @@ class Point(object):
 class GCodeGenerator(object):
 
     def __init__(self, tool_diameter: int, feed_rate: int = 1000, speed: int = 2000, angle_to_align: float = 0.0,
-                 output_method: OutputMethod = OutputMethod.FILE, output_file='out.g'):
+                 output_method: OutputMethod = OutputMethod.FILE, output_file='out.tap'):
 
         # Operation
         self.feed_rate = feed_rate
@@ -87,6 +87,15 @@ class GCodeGenerator(object):
 
         with open(self.output_file, 'w') as f:
             f.write('; Generated Code:')
+
+    def insertNewLine(self):
+        self.__outputCode("\n")
+
+    def enterRelativeMode(self):
+        self.writeManualCodeToFile("G91")
+
+    def enterAbsoluteMode(self):
+        self.writeManualCodeToFile("G90")
 
     def getInitialCode(self):
 
