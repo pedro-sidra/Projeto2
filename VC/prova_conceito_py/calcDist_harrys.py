@@ -3,6 +3,11 @@ import cv2
 
 USE_CORNER_DETECTION=False
 
+def getAngle(contour):
+    rect = cv2.minAreaRect(contour)
+
+    print(rect[2])
+    return rect
 
 def findCorner(image):
     # Converte para grayscale se necessário
@@ -116,10 +121,16 @@ upper_piece = np.array([28,255,73])
 lower_reference = np.array([0,157,87])
 upper_reference = np.array([15,255,255])
 
-image= cv2.imread('/home/freitas/Code/Projeto2/VC/prova_conceito_py/img.jpeg',cv2.IMREAD_COLOR)
+image= cv2.imread('/home/hanel/Projeto2/VC/prova_conceito_py/img.jpeg',cv2.IMREAD_COLOR)
 
 workpiece = findPiece(image, 20, lower_piece, upper_piece)
 reference = findPiece(image, 20, lower_reference, upper_reference)
+print(workpiece)
+rect = getAngle(workpiece)
+box = cv2.boxPoints(rect)
+box = np.int0(box)
+
+cv2.drawContours(image,[box],-1,(0,0,255),1)
 
 referenceWidth = 180.0
 referenceHeight = 130.0
@@ -131,4 +142,4 @@ workpieceDistance = cmPerPixel*np.linalg.norm(relativePosition,2)
 cv2.putText(image, "Distancia medida: " + str(workpieceDistance)+ " cm", (10,600), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255))
 cv2.imshow('image',image)
 cv2.waitKey(0)
-cv2.destroyAllWindows()
+cv2.destroyAllWindows() 
