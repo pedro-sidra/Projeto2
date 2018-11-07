@@ -88,6 +88,15 @@ class GCodeGenerator(object):
         with open(self.output_file, 'w') as f:
             f.write('; Generated Code:')
 
+    def insertNewLine(self):
+        self.__outputCode("\n")
+
+    def enterRelativeMode(self):
+        self.writeManualCodeToFile("G91")
+
+    def enterAbsoluteMode(self):
+        self.writeManualCodeToFile("G90")
+
     def getInitialCode(self):
 
         # TODO: prepare the initial commands to configure the machine
