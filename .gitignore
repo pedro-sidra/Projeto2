@@ -1,1 +1,7 @@
 *.png
+*.tap
+*.g
+*.jpeg
+*.jpg
+toMach3.txt
+fromMach3.txt
