@@ -109,7 +109,31 @@ class GCodeGenerator(object):
     def insertNewLine(self):
         """Adds new numbered line."""
 
-        self.__outputCode("\n")
+        self.writeManualCodeToFile("\n")
+
+    def resetReference(self):
+        """Puts the reference on the home position."""
+
+        self.__outputCode("G92.1")
+
+    def setReference(self, point: Point):
+        """Sets the reference."""
+
+        x, y, z = point.getPoint()
+
+        code = '{NL}; Setting the reference'
+        code += '\nG92 X%s Y%s Z%s' % (x, y, z)
+
+        code = self.__convertNewLines(code)
+        return self.__outputCode(code)
+
+    def rotateCoordinateSystem(self, angle):
+        code = '{NL}; Rotating the coordinate system'
+        code += '\nG68 A0 B0 R%s' % (angle)
+
+        code = self.__convertNewLines(code)
+        return self.__outputCode(code)
+
 
     def enterRelativeMode(self):
         """Changes to relative position mode."""

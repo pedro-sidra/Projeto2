@@ -136,9 +136,11 @@ def main():
     ref = shapedetect.callibAndGetPiece(stitched, {"type": "hsv", "block": 3})
     piece = shapedetect.callibAndGetPiece(stitched, {"type": "hsv", "block": 3})
 
+    angle = shapedetect.getAngle(piece)
+
     print(ref)
     print(piece)
-
+    print("Angle: {:2f}".format(angle))
     refWidthReal = 5
     refHeightReal = 3.8
 
@@ -161,11 +163,17 @@ def main():
 
         gc.cleanFile()
         gc.getInitialCode()
-        gc.enterRelativeMode()
+        #gc.enterRelativeMode()
         print(relPosPixels)
         relX = relPosPixels[0][1] * mmPerPixel
         relY = relPosPixels[0][0] * mmPerPixel
-        gc.moveLinear(Point(relX, relY, 0))
+        #Hardcoded, mudar
+        Xref = relX + 30
+        Yref = relY + 60
+
+        gc.moveLinear(Point(Xref, Xref, 0))
+        gc.setReference(Point(Xref, Xref, 0))
+        gc.rotateCoordinateSystem(angle)
         gc.insertNewLine()
 
         waitForMach3()

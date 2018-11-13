@@ -81,6 +81,27 @@ def getBinarizationParams(args):
 
     return params
 
+# Retorna o ângulo de um contorno
+def getAngle(contour):
+    rect = cv2.minAreaRect(contour)
+    dim1=rect[1][0]
+    dim2=rect[1][1]
+    if(dim1>dim2):
+        angle = -rect[2]
+    else:
+        angle = 90-rect[2]
+    
+    if angle >=90 and angle <180:
+        angle = angle - 90
+    elif angle >=180:
+        angle -= 180
+    angle = abs(angle)
+
+    print (angle)
+
+    return angle
+
+
 
 # Obtém uma máscara que separa objetos se baseando na sua cor
 def getArea(image, lower_bound, upper_bound):
