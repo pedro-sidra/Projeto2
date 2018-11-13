@@ -1,12 +1,19 @@
+"""This file defines the Point and GCodeGenerator classes. The first is responsible for storing 3D positions and the
+second is used to generate G Code."""
+
 from enum import IntEnum
+from GCodeChooser import *
+from tkinter import Tk
 
 
 class OutputMethod(IntEnum):
+    """Enumeration for output: STRING only or FILE (default)."""
     STRING = 0
     FILE = 1
 
 
 class SpindleStatus(IntEnum):
+    """Enumeration for Spindle status."""
     CW = 0
     CCW = 1
     OFF = 2
@@ -23,12 +30,14 @@ class Point(object):
         self.setPoint(x, y, z)
 
     def setPoint(self, x: float, y: float, z: float):
+        """Configs the points based on inputs x, y and z."""
 
         self.__x = float(x)
         self.__y = float(y)
         self.__z = float(z)
 
     def getPoint(self) -> []:
+        """Returns a list of the three coordinates."""
 
         return [self.__x, self.__y, self.__z]
 
@@ -37,7 +46,15 @@ class GCodeGenerator(object):
 
     def __init__(self, tool_diameter: int, feed_rate: int = 1000, speed: int = 2000, angle_to_align: float = 0.0,
                  output_method: OutputMethod = OutputMethod.FILE, output_file='out.tap'):
-
+        """
+        GCodeGenerator class is responsible for GCodeGeneration.
+        :param tool_diameter: The tool diameter used for radius corrections.
+        :param feed_rate: Feed Rate used for G1.
+        :param speed: Spingle rotation speed.
+        :param angle_to_align: Angle to rotate.
+        :param output_method: OutputMethod(IntEnum).
+        :param output_file: name/path of the generated code file.
+        """
         # Operation
         self.feed_rate = feed_rate
         self.speed = speed
@@ -84,20 +101,28 @@ class GCodeGenerator(object):
     # endregion
 
     def cleanFile(self):
+        """Cleans output file."""
 
         with open(self.output_file, 'w') as f:
             f.write('; Generated Code:')
 
     def insertNewLine(self):
+        """Adds new numbered line."""
+
         self.__outputCode("\n")
 
     def enterRelativeMode(self):
+        """Changes to relative position mode."""
+
         self.writeManualCodeToFile("G91")
 
     def enterAbsoluteMode(self):
+        """Changes to absolute position mode."""
+
         self.writeManualCodeToFile("G90")
 
     def getInitialCode(self):
+        """Returns CNC initial ocnfigurations."""
 
         # TODO: prepare the initial commands to configure the machine
         code = '{NL}; Initial code to prepare machine and environment'
@@ -109,6 +134,7 @@ class GCodeGenerator(object):
         return self.__outputCode(code)
 
     def moveFast(self, point: Point):
+        """Runs fast movement. The path may not be linear."""
 
         x, y, z = point.getPoint()
 
@@ -119,6 +145,9 @@ class GCodeGenerator(object):
         return self.__outputCode(code)
 
     def moveLinear(self, point: Point, feed_rate: int = None):
+        """Moves linearly to the 'point' position by moving in 'feed_Rate' speed."""
+
+
         x, y, z = point.getPoint()
         feed_rate = self.feed_rate if feed_rate is None else feed_rate
 
@@ -130,6 +159,11 @@ class GCodeGenerator(object):
         return self.__outputCode(code)
 
     def setSpindle(self, spindle_status: SpindleStatus, speed: int = None):
+        """Sets spindle rotation.
+        :param spindle_status: SpindleStatus(IntEnum).
+        :param speed: rotational speed.
+        :return: generated code for spindle configuration.
+        """
 
         speed = self.speed if speed is None else speed
 
@@ -147,13 +181,18 @@ class GCodeGenerator(object):
         code = self.__convertNewLines(code)
         return self.__outputCode(code)
 
-    def writeManualCodeToFile(self, manual_code: str):
+    def writeManualCodeToFile(self, manual_code: str, include_new_line = True):
+        """Adds 'manual_code' to the file. A new numbered line is added to the beginning if 'include_new_line'
+        parameter is True."""
 
-        manual_code = '\n' + manual_code
+        if include_new_line:
+            manual_code = '\n' + manual_code
+
         manual_code = self.__convertNewLines(manual_code)
         return self.__outputCode(manual_code)
 
     def runAlignedToPlaneCommand(self, subprogram: int, angle: float = None):
+        """Runs subprogram number 'subprogram' rotated by 'angle'."""
 
         angle = self.angle_to_align if angle is None else angle
         angle = str(angle)
@@ -166,6 +205,7 @@ class GCodeGenerator(object):
         return self.__outputCode(code)
 
     def startSubprogramDefinition(self, id: int):
+        """Starts definition of subprogram number 'id'."""
 
         code = '{NL}{NL}; Subprogram %s definition' % id
         code += '\nO%s' % id
@@ -174,6 +214,7 @@ class GCodeGenerator(object):
         return self.__outputCode(code)
 
     def finishSubprogramDefinition(self):
+        """Finishes subprogram definition."""
 
         code = '{NL}; Finishing subprogram definition'
         code += '\nM99'
@@ -181,4 +222,51 @@ class GCodeGenerator(object):
 
         code = self.__convertNewLines(code)
         return self.__outputCode(code)
+
+    def loadGCode(self, path=None) -> bool:
+        """Loads G Code from a file and appends to output file.
+        :param path: If None, a dialog will open to find file. Otherwise, will use 'path' as the file path.
+        :return: True if importing was successful, False otherwise.
+        """
+
+        ret = False
+        # region Gets file path from parameter or GUI. Path is 'None' if file is not selected.
+        if path is None:
+
+            master = Tk()
+            gui = GCodeChooser(master)
+            master.mainloop()
+
+            # 'gcode_user_file_path' is a variable from GCodeChooser class
+            try:
+                path = gui.getFilePath()
+            except:
+                path = None
+
+        else:
+            path = path
+
+        # endregion
+
+        if path is not None:
+
+            try:
+                with open(path, mode='r') as f:
+
+                    lines = f.readlines()
+                    gc.writeManualCodeToFile('{NL}{NL}; START OF IMPORTED CODE{NL}', include_new_line = False)
+
+                    for line in lines:
+                        line = line.replace('\n', '')
+                        self.writeManualCodeToFile(line)
+
+                    gc.writeManualCodeToFile('{NL}{NL}; END OF IMPORTED CODE{NL}', include_new_line=False)
+                    ret = True
+            except:
+                print('Issue while trying to load file.')
+
+        else:
+            print('File not selected, therefore not used.')
+
+        return ret
 
