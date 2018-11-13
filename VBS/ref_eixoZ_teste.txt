@@ -18,14 +18,36 @@
 '***O sinal é recebido pelo Mach3 como se fosse o mesmo da probe
 '
 '-------------------
-'VB Code Start
+'COISAS QUE EU NAO SEI O QUE SAO
 '-------------------
-
-CurrentFeed = GetOemDRO(818)
-DoSpinStop()
-
+CurrentFeed = GetOemDRO(818) 'guarda o valor do feedrate atual (n sei pq)
+DoSpinStop() 
 '-----------------------------------------------------
 'PARAMETROS PRA MEDIR E SETAR NA HORA DO TESTE
 '-----------------------------------------------------
 EspessuraProbe = 
-DistApalBase
+DistApalpBase =
+Zmax = 
+'Zrapido =       'Até aonde dá pra descer rápido pra tocar na probe
+ZOffset = 10.00 'quanto subir por segurança, dá pra mudar se precisar
+'-----------------------------------------------------
+'CODIGO DE FATO
+'-----------------------------------------------------
+'Ferramenta:
+'-----------------------------------------------------
+If GetOemLed(825) <> 0 Then 'verifica se a probe ja ta no terra
+    Code "(Erro: Probe aterrada)" 'Mostra mensagem de erro
+Else
+    Code "F300" 'feedrate pra descer 
+    Code "G31Z-" & Zmax 'desce
+    While IsMoving()
+    Wend
+    Zfer = GetVar(2002) 'armazena o valor medido da ferramente
+    
+    
+
+I
+
+
+
+
