@@ -1,5 +1,8 @@
 import cv2
+import json
 import numpy as np
+from collections import OrderedDict
+import os
 
 import argparse
 
@@ -46,19 +49,19 @@ def nothing(x):
 # the value will be the current value of the param)
 def getParamDict(args):
     if args["type"] == "ada":
-        return {'blockSize': 1000, 'Cval': 255}
+        return OrderedDict([('blockSize', 1000), ('Cval', 255)])
     elif args["type"] == "canny":
-        return {'thresh1': 500, 'thresh2': 500}
+        return OrderedDict([('thresh1', 500), ('thresh2', 500)])
     elif args["type"] == "bin":
-        return {'thresh': 255}
+        return OrderedDict([('thresh', 255)])
     elif args["type"] == "otsu":
-        return {}
+        return OrderedDict([])
     elif args["type"] == "hsv":
-        return {'highH': 180, 'lowH': 180, 'highS': 255, 'lowS': 255, 'highV': 255, 'lowV': 255}
+        return OrderedDict([('highH', 180), ('lowH', 180), ('highS', 255), ('lowS', 255), ('highV', 255), ('lowV', 255)])
     elif args["type"] == "hsvneg":
-        return {'highHNeg': 180, 'lowHNeg': 180, 'highS': 255, 'lowS': 255, 'highV': 255, 'lowV': 255}
+        return OrderedDict([('highHNeg', 180), ('lowHNeg', 180), ('highS', 255), ('lowS', 255), ('highV', 255), ('lowV', 255)])
     else:
-        return {'blockSize:': 300, 'Cval': 255}
+        return OrderedDict([('blockSize', 300), ('Cval', 255)])
 
 
 # From the parameters passed, create appropriate trackbars
@@ -70,6 +73,11 @@ def createBinarizationTrackbars(args):
     for paramName, value in params.items():
         cv2.createTrackbar(paramName, 'Mask', 1, value, nothing)
 
+def setBinarizationParams(params):
+
+    # Iterate over the params and create a trackbar for each
+    for paramName, value in params.items():
+        cv2.setTrackbarPos(paramName, 'Mask', int(value))
 
 def getBinarizationParams(args):
     # Get the params in a dict
@@ -120,8 +128,7 @@ def getArea(image, lower_bound, upper_bound):
 
 
 # Obtem mascara de acordo com as opcoes do programa
-def getMaskFromOptions(args, image):
-    params = getBinarizationParams(args)
+def getMaskFromOptions(args, params, image):
 
     if args["type"] == "ada":
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -278,13 +285,21 @@ def findPiece(mask, margin=None):
         return workpiece
 
 
-def callibAndGetPiece(image, args):
+def callibAndGetPiece(image, args, paramsFile=None):
     # Create trackbars window
     cv2.namedWindow('Mask', cv2.WINDOW_AUTOSIZE)
     createBinarizationTrackbars(args)
 
+    if paramsFile is not None and os.path.isfile(paramsFile):
+        with open(paramsFile, 'r') as f:
+            text = f.read()
+            params = json.loads(text)
+        setBinarizationParams(params)
     while True:
-        mask = getMaskFromOptions(args, image)
+        params = getBinarizationParams(args)
+
+        mask = getMaskFromOptions(args, params, image)
+
         mask = morphCloseThenOpen(args, mask)
 
         workpiece = findPiece(mask)
@@ -296,6 +311,11 @@ def callibAndGetPiece(image, args):
         key = cv2.waitKey(1) & 0xFF
         if key == 27:
             break
+
+    if paramsFile is not None:
+        params = getBinarizationParams(args)
+        with open(paramsFile,'w') as f:
+            f.write(json.dumps(params))
 
     return workpiece
 

@@ -1,9 +1,14 @@
-from GCodeGenerator.GCodeGenerator import *
-from . import shapedetect
+import sys
+sys.path.append('C:/Users/Pedro/Documents/Code/Projeto2')
+
+
+import shapedetect
 import argparse
 import numpy as np
 import time
+import pdb
 import cv2
+from GCodeGenerator.GCodeGenerator import *
 
 
 # Teste de comunicacao com o Mach3!
@@ -11,6 +16,9 @@ import cv2
 # Ideia: este programa escreve um cod. G com uma coordenada,
 # espera o Mach3 executar esse codigo e chegar ate a coordenada,
 # e entao escreve outro codigo G para voltar pra posicao inicial
+
+# This is a huge number
+HUGENUMBER = 10000000
 
 def waitForOK():
     receivedOk = False
@@ -83,6 +91,7 @@ def parseArgs():
     ap = argparse.ArgumentParser()
     ap.add_argument("-d", "--device", required=False, type=int,
                     default=0, help="device to use, int")
+    ap.add_argument("--loadpics", action='store_true')
     args = vars(ap.parse_args())
     return args
 
@@ -112,41 +121,87 @@ def findRelativeWorkpiecePosition(workpiece, reference):
             bestWPoint,
             bestRPoint)
 
+def readSavedTableImages():
+    return [cv2.imread("mesa0.TIFF"), cv2.imread("mesa1.TIFF")]
+
 
 def main():
+    # Parse command line args and store them in a dict
     args = parseArgs()
-    print(args)
 
-    picturePoints = [
+    # Points to move the machine and take pictures
+    # (Defines the number os pictures as well)
+    PICTURE_POINTS = [
         Point(166, 300, 0),
         Point(440, 300, 0)
     ]
+    # (When testing at home)
+#    PICTURE_POINTS = [
+#        Point(10,10,0),
+#        Point(0,0,0),
+#    ]
+  
+    # Calibrated points on the extremities of the reference tags
+    PIECE_POINTS =[
+        np.array((28.7,6.78)),
+        np.array((425.1,0.62))
+    ]
 
-    pictures = takePicturesWithMachine(picturePoints, device=args["device"])
+    # If the user requested to load images, read them
+    # otherwise, take the pictures with the machine and write tem to mesa{0..n}
+    if args['loadpics']:
+        pictures = readSavedTableImages()
+    else:
+        pictures = takePicturesWithMachine(PICTURE_POINTS, device=args["device"])
+        for num, pic in enumerate(pictures):
+            cv2.imwrite("mesa"+str(num)+".TIFF", pic)
 
-    # for pic in pictures:
-    # cv2.imshow("Pic", pic)
-    # cv2.waitKey()
+    # For each pictue, gets ref and piece contours
+    # Chooses the pair that has the least distance from ref to piece
+    # (RefPieceLen contains the tuple (ref, piece, lenght of distance) for each image)
+    refs=[]
+    pieces=[]
+    chosenPictureidx = None
+    minDist = None
 
-    stitched = stitchImages(pictures, gambiarra=True)
 
-    # cv2.imshow("Result of Stitch", stitched)
-    # cv2.waitKey()
+    for i, pic in enumerate(pictures):
+        print("Calibrate Reference:")
+        ref = shapedetect.callibAndGetPiece(pic, 
+                                            {"type": "hsv", "block": 3}, 
+                                            paramsFile="refHSV.txt")
+        print("Calibrate piece:")
+        piece = shapedetect.callibAndGetPiece(pic,
+                                              {"type": "hsv", "block": 3}, 
+                                              paramsFile="pieceHSV.txt")
 
-    ref = shapedetect.callibAndGetPiece(stitched, {"type": "hsv", "block": 3})
-    piece = shapedetect.callibAndGetPiece(stitched, {"type": "hsv", "block": 3})
+        if ref is not None and piece is not None:
+            relPosPixels, pwork, pref = findRelativeWorkpiecePosition(workpiece=piece, reference=ref)
+            dist = np.linalg.norm(relPosPixels)
+        else:
+            dist = None
 
-    angle = shapedetect.getAngle(piece)
+        if dist is not None:
+            if minDist is None or dist < minDist:
+                minDist = dist
+                chosenPictureidx = i
 
-    print(ref)
-    print(piece)
-    print("Angle: {:2f}".format(angle))
-    refWidthReal = 5
-    refHeightReal = 3.8
+        refs.append(ref)
+        pieces.append(piece)
+
+    # Finds ref and piece such that norm(relPos) is minimum
+    # (this means: minimum lenght of relPosPixels)
+    # TODO: urgently make this more readable, its 2AM right now
+    ref, piece, realRefPoint = refs[chosenPictureidx], pieces[chosenPictureidx], PIECE_POINTS[chosenPictureidx]
+
+    pieceAngle = shapedetect.getAngle(piece)
+
+    refWidthReal = 35
+    refHeightReal = 35
 
     p, size, angle = cv2.minAreaRect(ref)
 
-    mmPerPixel = (refWidthReal / size[0] + refHeightReal / size[1]) * 10 / 2
+    mmPerPixel = (refWidthReal / size[0] + refHeightReal / size[1])/2
 
     if ref is not None and piece is not None:
         relPosPixels, pwork, pref = findRelativeWorkpiecePosition(workpiece=piece, reference=ref)
@@ -155,25 +210,22 @@ def main():
         # cv2.imshow("Posicao Realtiva",stitched)
 
         gc = GCodeGenerator(5)
-        gc.getInitialCode()
-        gc.moveLinear(Point(30, 60, 0))
-        gc.insertNewLine()
 
-        waitForMach3()
-
-        gc.cleanFile()
-        gc.getInitialCode()
-        #gc.enterRelativeMode()
-        print(relPosPixels)
         relX = relPosPixels[0][1] * mmPerPixel
         relY = relPosPixels[0][0] * mmPerPixel
-        #Hardcoded, mudar
-        Xref = relX + 30
-        Yref = relY + 60
 
-        gc.moveLinear(Point(Xref, Xref, 0))
-        gc.setReference(Point(Xref, Xref, 0))
-        gc.rotateCoordinateSystem(angle)
+        Xref = relX + realRefPoint[0]
+        Yref = relY + realRefPoint[1]
+
+
+        # maquina.vaiPra(x,y,z)
+        # maquina.zeraRef()
+        # maquina.rotacionaSCM(angulo)
+        gc.cleanFile()
+        gc.getInitialCode()
+        gc.moveLinear(Point(Xref, Yref, 0))
+        gc.setReference(Point(0, 0, 0))
+        gc.rotateCoordinateSystem(pieceAngle)
         gc.insertNewLine()
 
         waitForMach3()

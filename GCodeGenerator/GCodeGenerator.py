@@ -2,7 +2,7 @@
 second is used to generate G Code."""
 
 from enum import IntEnum
-from GCodeChooser import *
+from GCodeGenerator.GCodeChooser import *
 from tkinter import Tk
 
 
