@@ -18,9 +18,9 @@
 '***O sinal é recebido pelo Mach3 como se fosse o mesmo da probe
 '
 '-------------------
-'COISAS QUE EU NAO SEI O QUE SAO
+'
 '-------------------
-CurrentFeed = GetOemDRO(818) 'guarda o valor do feedrate atual (n sei pq)
+CurrentFeed = GetOemDRO(818) 'guarda o valor do feedrate atual
 DoSpinStop() 
 '-----------------------------------------------------
 'PARAMETROS PRA MEDIR E SETAR NA HORA DO TESTE
@@ -42,10 +42,35 @@ Else
     Code "G31Z-" & Zmax 'desce
     While IsMoving()
     Wend
-    Zfer = GetVar(2002) 'armazena o valor medido da ferramente
-    
-    
+    Zfer = GetVar(2002) 'armazena o valor medido da ferramenta
+    Code "G0 Z0" &0 'manda subir de volta pro zero
+End If
 
+'-----------------------------------------------------
+'Apalpador:
+'-----------------------------------------------------
+If GetOemLed(825) <> 0 Then 'verifica se a probe ja ta no terra
+    Code "(Erro: Probe aterrada)" 'Mostra mensagem de erro
+Else 
+    Code "G0 X50 Y50" 'manda pra cima da peça arbitraria
+    Code "G4 P5" 'para por 5 segundos pra poder girar o apalpador
+    Code "F300" 'feedrate pra descer
+    Code "G31Z-" & Zmax 'desce até tocar o apalpador
+    Zapalp = GetVar(2002) 'armazena o valor medido pelo apalpador
+    Code "G0 Z" & Zapalp-10 'sobe 10mm pra recolher apalpador
+    Code "G4 P5" 'para + 5 segundos pra recolher
+End If
+
+'-----------------------------------------------------
+'Teste:
+'-----------------------------------------------------
+Zzero = Zfer + Zapalp + EspessuraProbe - DistApalpBase
+Code "G0 Z" & Zzero 'manda pra zero pra ver se deu boa
+Code "G92 Z0" 'zerou
+    
+'-----------------------------------------------------
+'Fim do script!
+'-----------------------------------------------------
 I
 
 
