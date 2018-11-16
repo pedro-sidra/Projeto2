@@ -56,6 +56,8 @@ Else
     Code "G4 P5" 'para por 5 segundos pra poder girar o apalpador
     Code "F300" 'feedrate pra descer
     Code "G31Z-" & Zmax 'desce até tocar o apalpador
+    While IsMoving()
+    Wend
     Zapalp = GetDro(2) 'armazena o valor medido pelo apalpador
     Code "G0 Z" & Zapalp-10 'sobe 10mm pra recolher apalpador
     Code "G4 P5" 'para + 5 segundos pra recolher
