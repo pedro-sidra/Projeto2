@@ -42,7 +42,7 @@ Else
     Code "G31Z-" & Zmax 'desce
     While IsMoving()
     Wend
-    Zfer = GetVar(2002) 'armazena o valor medido da ferramenta
+    Zfer = GetDro(2) 'armazena o valor medido da ferramenta
     Code "G0 Z0" &0 'manda subir de volta pro zero
 End If
 
@@ -56,7 +56,7 @@ Else
     Code "G4 P5" 'para por 5 segundos pra poder girar o apalpador
     Code "F300" 'feedrate pra descer
     Code "G31Z-" & Zmax 'desce até tocar o apalpador
-    Zapalp = GetVar(2002) 'armazena o valor medido pelo apalpador
+    Zapalp = GetDro(2) 'armazena o valor medido pelo apalpador
     Code "G0 Z" & Zapalp-10 'sobe 10mm pra recolher apalpador
     Code "G4 P5" 'para + 5 segundos pra recolher
 End If
