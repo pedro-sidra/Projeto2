@@ -1,4 +1,4 @@
-from GCodeGenerator.GCodeGenerator import *
+from proj2.GCodeGenerator.GCodeGenerator import *
 import time
 
 

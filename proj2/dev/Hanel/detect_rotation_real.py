@@ -1,10 +1,6 @@
-import sys
-
-sys.path.insert(0, './GCodeGenerator/')
-sys.path.insert(0, './VC/')
-from GCodeGenerator import GCodeGenerator
-from shapedetect_gambiarrento import *
-import numpy as np 
+from proj2.GCodeGenerator import GCodeGenerator
+from proj2.dev.Hanel.shapedetect_gambiarrento import *
+import numpy as np
 import cv2
 def nothing(x):
     pass
@@ -18,7 +14,7 @@ def getAngle(contour):
         angle = -rect[2]
     else:
         angle = 90-rect[2]
-    
+
     if angle >=90 and angle <180:
         angle = angle - 90
     elif angle >=180:

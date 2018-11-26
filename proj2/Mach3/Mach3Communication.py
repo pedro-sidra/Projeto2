@@ -17,7 +17,7 @@ comm.runGCodeSafely(gc)
 """
 
 import time
-from GCodeGenerator.GCodeGenerator import *
+from proj2.GCodeGenerator.GCodeGenerator import *
 import os
 
 COMMUNICATION_TIMEOUT = 10  # Seconds

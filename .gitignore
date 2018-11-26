@@ -6,4 +6,6 @@
 *.TIFF
 toMach3.txt
 fromMach3.txt
+*.egg-info/
+myenv/
 __pycache__/

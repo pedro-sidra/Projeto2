@@ -1,14 +1,14 @@
 import sys
-sys.path.append('C:/Users/Pedro/Documents/Code/Projeto2')
 
 
-import shapedetect
+import proj2.VC.shapedetect as shapedetect
+from proj2.GCodeGenerator.GCodeGenerator import *
+
 import argparse
 import numpy as np
 import time
 import pdb
 import cv2
-from GCodeGenerator.GCodeGenerator import *
 
 
 # Teste de comunicacao com o Mach3!
