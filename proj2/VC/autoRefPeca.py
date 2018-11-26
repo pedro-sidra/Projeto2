@@ -194,8 +194,9 @@ def main():
     # TODO: urgently make this more readable, its 2AM right now
     ref, piece, realRefPoint = refs[chosenPictureidx], pieces[chosenPictureidx], PIECE_POINTS[chosenPictureidx]
 
-    pieceAngle = shapedetect.getAngle(piece)
-
+    pieceAngle = shapedetect.getAngle(piece, pwork, stitched)
+    print("Angle: {:2f}".format(pieceAngle))
+    
     refWidthReal = 35
     refHeightReal = 35
 

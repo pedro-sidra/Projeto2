@@ -89,25 +89,48 @@ def getBinarizationParams(args):
 
     return params
 
+def isPerpendicular(angle1,angle2, tol):
+    return not(abs(angle1-angle2)<90-tol or abs(angle1-angle2)>90+tol)
+
 # Retorna o ângulo de um contorno
-def getAngle(contour):
+def getAngle(contour, workpiece, image):
+
     rect = cv2.minAreaRect(contour)
-    dim1=rect[1][0]
-    dim2=rect[1][1]
-    if(dim1>dim2):
-        angle = -rect[2]
-    else:
-        angle = 90-rect[2]
+    box = cv2.boxPoints (rect)
+
+    origin = []
+    dist = 100000
+    i=0
+    for boxes in box: # Encontra a origem do sistema de coordenadas
+        if (np.linalg.norm(boxes-workpiece[0])<dist):
+            dist = np.linalg.norm(boxes-workpiece[0])
+            index = i
+            i+=1
+            origin = boxes        
+
+    box = np.delete(box,index,0)    
+    lineAngles = []
+    for boxes in box:
+        lineAngles.append(-(math.atan2(boxes[1]-origin[1],boxes[0]-origin[0]))*180/math.pi)
+        
+        cv2.line(image, (origin[0],origin[1]), (boxes[0],boxes[1]), (0,255,255) ,1 )
     
-    if angle >=90 and angle <180:
-        angle = angle - 90
-    elif angle >=180:
-        angle -= 180
-    angle = abs(angle)
-
-    print (angle)
-
+    if isPerpendicular(lineAngles[1],lineAngles[0],5):
+        del lineAngles[2]
+    elif isPerpendicular(lineAngles[2],lineAngles[0],5):
+        del lineAngles[1]
+    elif isPerpendicular(lineAngles[2],lineAngles[1],5):
+        del lineAngles[0]
+    #verifica se o primeiro valor é o eixo y
+    lineAngles = np.array(lineAngles)
+    if(lineAngles[1]-lineAngles[0])<0:
+        angle = lineAngles[0]
+    else:   
+        angle = lineAngles[1] 
+  
     return angle
+
+
 
 
 
