@@ -13,21 +13,21 @@
 '11) ???
 '3) Profit!
 '
-'*Depois esses valores vem da visão computacional
-'**Depois vai ser com o servo
-'***O sinal é recebido pelo Mach3 como se fosse o mesmo da probe
+'Depois esses valores vem da visão computacional
+'Depois vai ser com o servo
+'O sinal é recebido pelo Mach3 como se fosse o mesmo da probe
 '
-'-------------------
-'COISAS QUE EU NAO SEI O QUE SAO
-'-------------------
-CurrentFeed = GetOemDRO(818) 'guarda o valor do feedrate atual (n sei pq)
+'------------------
+'
+'------------------
+CurrentFeed = GetOemDRO(818) 'guarda o valor do feedrate atual
 DoSpinStop() 
-'-----------------------------------------------------
+'----------------------------------------------------
 'PARAMETROS PRA MEDIR E SETAR NA HORA DO TESTE
-'-----------------------------------------------------
-EspessuraProbe = 
-DistApalpBase =
-Zmax = 
+'----------------------------------------------------
+EspessuraProbe = +0.5
+DistApalpBase = -62.3539
+Zmax = 108.5
 'Zrapido =       'Até aonde dá pra descer rápido pra tocar na probe
 ZOffset = 10.00 'quanto subir por segurança, dá pra mudar se precisar
 '-----------------------------------------------------
@@ -36,18 +36,44 @@ ZOffset = 10.00 'quanto subir por segurança, dá pra mudar se precisar
 'Ferramenta:
 '-----------------------------------------------------
 If GetOemLed(825) <> 0 Then 'verifica se a probe ja ta no terra
-    Code "(Erro: Probe aterrada)" 'Mostra mensagem de erro
+    MsgBox "(Erro: Probe aterrada)" 'Mostra mensagem de erro
 Else
     Code "F300" 'feedrate pra descer 
     Code "G31Z-" & Zmax 'desce
     While IsMoving()
     Wend
-    Zfer = GetVar(2002) 'armazena o valor medido da ferramente
+    Zfer = GetDro(2) 'armazena o valor medido da ferramenta
+    Code "G0 Z0" &0 'manda subir de volta pro zero
+    While IsMoving()
+    Wend
+End If
+
+'-----------------------------------------------------
+'Apalpador:
+'-----------------------------------------------------
+If GetOemLed(825) <> 0 Then 'verifica se a probe ja ta no terra
+    MsgBox "(Erro: apalpador aterrado)" 'Mostra mensagem de erro
+Else 
+    Code "G0 X50 Y50" 'manda pra cima da peça arbitraria
+    Code "G4 P5" 'para por 5 segundos pra poder girar o apalpador
+    Code "F300" 'feedrate pra descer
+    Code "G31Z-" & Zmax 'desce até tocar o apalpador
+    While IsMoving()
+    Wend
+    Zapalp = GetDro(2) 'armazena o valor medido pelo apalpador
+    Code "G0 Z" & Zapalp+10 'sobe 10mm pra recolher apalpador
+    Code "G4 P5" 'para + 5 segundos pra recolher
+    While IsMoving()
+    Wend
+End If
+
+'-----------------------------------------------------
+'Teste:
+'-----------------------------------------------------
+Zzero = Zfer + Zapalp + EspessuraProbe - DistApalpBase
+Code "G0 Z" & Zzero 'manda pra zero pra ver se deu boa
+Code "G92 Z0" 'zerou
     
-    
-
-I
-
-
-
-
+'-----------------------------------------------------
+'Fim do script!
+'-----------------------------------------------------
