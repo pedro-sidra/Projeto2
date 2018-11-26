@@ -6,3 +6,4 @@
 *.TIFF
 toMach3.txt
 fromMach3.txt
+__pycache__/
