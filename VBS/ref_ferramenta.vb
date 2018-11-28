@@ -12,20 +12,13 @@
 '10) Reza pra máquina parar
 '11) ???
 '3) Profit!
-'
-'Depois esses valores vem da visão computacional
-'Depois vai ser com o servo
-'O sinal é recebido pelo Mach3 como se fosse o mesmo da probe
-'
-'------------------
-'
-'------------------
+
 CurrentFeed = GetOemDRO(818) 'guarda o valor do feedrate atual
 DoSpinStop()
 '----------------------------------------------------
 'PARAMETROS PRA MEDIR E SETAR NA HORA DO TESTE
 '----------------------------------------------------
-EspessuraProbe = +0.2
+'EspessuraProbe = +0.2
 Zmax = 108.5    ' Até onde pode descer rápido pra tocar na probe
 '-----------------------------------------------------
 'CODIGO DE FATO
@@ -45,8 +38,7 @@ Else
     Code "G0 Z0" &0 'manda subir de volta pro zero
     While IsMoving()
     Wend
-    
-    MsgBox (Zfer) 'Mostra mensagem de erro
+	SetUserDRO(1001, Zfer)
     Code "G4 P2"
     
 End If
