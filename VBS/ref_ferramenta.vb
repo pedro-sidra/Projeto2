@@ -35,7 +35,7 @@ Else
     
     Zfer = GetDro(2) 'armazena o valor medido da ferramenta
     Code "G4 P2"
-    Code "G0 Z0" &0 'manda subir de volta pro zero
+    Code "G0 Z0" 'manda subir de volta pro zero
     While IsMoving()
     Wend
 	SetUserDRO(1001, Zfer)
