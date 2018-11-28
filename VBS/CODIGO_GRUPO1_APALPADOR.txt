@@ -1,11 +1,11 @@
-'Script para testar o referenciamento da altura de uma peça
+'Script para testar o referenciamento da altura de uma peÃ§a
 'Estrutura do script:
-'1) Assume-se máquina sobre a peça
-'2) Sobe-se em Z para possibilitar uso da probe até uma altura Zsafe
+'1) Assume-se mÃ¡quina sobre a peÃ§a
+'2) Sobe-se em Z para possibilitar uso da probe atÃ© uma altura Zsafe
 '3) Atua-se no servo para rotacionar a probe de forma que fique para baixo
-'2) Desce o eixo Z (Z--) até tocar na probe, guardando esse valor como Zpiece
-'3) Sobe o eixo Z (Z++) até Zsafe novamente
-'4) Salva altura da peça como Zpiece + (comprimento da probe)
+'2) Desce o eixo Z (Z--) atÃ© tocar na probe, guardando esse valor como Zpiece
+'3) Sobe o eixo Z (Z++) atÃ© Zsafe novamente
+'4) Salva altura da peÃ§a como Zpiece + (comprimento da probe)
 '
 '-------------------
 'https://vdocuments.mx/reference-tables-for-normal-and-oem-codes.html
@@ -15,36 +15,24 @@ DoSpinStop()
 '-----------------------------------------------------
 'PARAMETROS PRA MEDIR E SETAR NA HORA DO TESTE
 '-----------------------------------------------------
-ComprimentoProbe = 200 
-
+'ComprimentoProbe = 200 
+Zmax = 100
 '-----------------------------------------------------
 'Apalpador:
 '-----------------------------------------------------
 If GetOemLed(825) <> 0 Then 'verifica se a probe ja ta no terra
     Code "(Erro: Probe aterrada)" 'Mostra mensagem de erro
 Else 
-    'Assume acima da peça
-
-    ' TODO: MUDAR 2 para número que signifique ler  o Z de home
-    Zsafe = GetDro(2)
-    Code "G0" & Zsafe
-    While IsMoving()
-    Wend
-
-    'Gira Servo para baixo (TODO)
-
     'Desce e pega leitura de probe
     Code "F300" 'feedrate pra descer
-    Code "G31Z-" & Zmax 'desce até tocar o apalpador
+    Code "G31Z-" & Zmax 'desce atÃ© tocar o apalpador
     While IsMoving()
     Wend
     Zpiece = GetDro(2) 'armazena o valor medido pelo apalpador
-
-    Code "G0 Z" & Zpiece-10 'sobe 10mm pra recolher apalpador
+    SetUserDRO(1002, Zpiece)
+    Code "G0 Z0" 'sobe atÃ© zero pra recolher apalpador
     
-    'Gira Servo para cima (TODO)
 
-    'Salva Zpiece no Mach3 (TODO)
 
 End If
 
