@@ -9,14 +9,20 @@ DoButton( 25 )
 DoOEMButton(133)
 DoOEMButton(134)
 DoOEMButton(135)
+x = getOEMDRO(83)
+While x <>0
+	x = getOEMDRO(83)
+Wend
+While IsMoving()
+Wend
+
 Sleep(1000)
 End If
 
 
 ' -------------------------FAZENDO FERRAMENTA-----------------------------------------
 If GetUserLED(1201) Then
-MsgBox "Terminou o Home?"
-MsgBox "Fazendo Ferramenta?"
+MsgBox "Doing Tool"
 
 'Script para testar o referenciamento do eixo Z de uma máquina CNC
 'Estrutura do script:
@@ -66,7 +72,7 @@ End If
 'Fim do script!
 '-----------------------------------------------------
 
-MsgBox("Referenciada Ferramenta")
+MsgBox("Referenced Tool")
 x = getuserDRO(1001)
 MsgBox(x)
 Sleep(1000)
@@ -75,7 +81,7 @@ End If
 
 ' ---------------------------FAZENDO XY---------------------------------------
 If GetUserLED(1202) Then
-MsgBox("Iniciando Comunicacao")
+MsgBox("Doing X-Y")
 
 Dim compok 'verifica se a String lida no arquivo é "ok"
 Dim compexit 'verifica se a String lida no arquivo é "exit"
@@ -117,7 +123,7 @@ While compexit <> 0
 
 Wend
 MsgBox "Done XY"
-MsgBox("Apalpando")
+MsgBox("Doing Piece Z")
 '--------------------------APALPANDO---------------------------
 '-------------------
 CurrentFeed = GetOemDRO(818) 'guarda o valor do feedrate atual
@@ -143,7 +149,7 @@ End If
 Open "C:\Users\Pedro\Documents\Code\Projeto2\fromMach3.txt" For Output As #1 ' Open file.
 Print #1, "ok" ' escreve a string para o arquivo
 Close
-MsgBox("Apalpado")
+MsgBox("Done piece Z")
 EspessuraProbe = +0.5
 DistApalpBase = -62.3539
 offset = -5

@@ -176,8 +176,8 @@ class GCodeGenerator(object):
         feed_rate = self.feed_rate if feed_rate is None else feed_rate
 
         code = '{NL}; Moving Linearly'
-        code += '\nG1 F%s' % feed_rate
-        code += '\nG1 X%s Y%s Z%s' % (x, y, z)
+        code += '\nG0 F%s' % feed_rate
+        code += '\nG0 X%s Y%s Z%s' % (x, y, z)
 
         code = self.__convertNewLines(code)
         return self.__outputCode(code)
