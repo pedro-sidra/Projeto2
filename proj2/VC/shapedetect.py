@@ -3,6 +3,7 @@ import json
 import numpy as np
 from collections import OrderedDict
 import os
+import math
 
 import argparse
 
@@ -113,7 +114,7 @@ def getAngle(contour, workpiece, image):
     for boxes in box:
         lineAngles.append(-(math.atan2(boxes[1]-origin[1],boxes[0]-origin[0]))*180/math.pi)
         
-        cv2.line(image, (origin[0],origin[1]), (boxes[0],boxes[1]), (0,255,255) ,1 )
+        #cv2.line(image, (origin[0],origin[1]), (boxes[0],boxes[1]), (0,255,255) ,1 )
     
     if isPerpendicular(lineAngles[1],lineAngles[0],5):
         del lineAngles[2]

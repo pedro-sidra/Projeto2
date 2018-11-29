@@ -145,12 +145,12 @@ def zero_xy():
   
     # Calibrated points on the extremities of the reference tags
     PIECE_POINTS =[
-        np.array((62,0)),
-        np.array((425,0))
+        np.array((55.343,2.333)),
+        np.array((407.70,1.29))
     ]
     
-    refWidthReal = 35
-    refHeightReal = 35
+    refWidthReal = 51
+    refHeightReal = 38
 
     # If the user requested to load images, read them
     # otherwise, take the pictures with the machine and write tem to mesa{0..n}
@@ -194,7 +194,7 @@ def zero_xy():
 
     ref, piece, realRefPoint = refs[chosenPictureidx], pieces[chosenPictureidx], PIECE_POINTS[chosenPictureidx]
 
-    pieceAngle = shapedetect.getAngle(piece, pwork, stitched)
+    pieceAngle = shapedetect.getAngle(piece, pwork, None)#stitched)
     print("Angle: {:2f}".format(pieceAngle))
 
     p, size, angle = cv2.minAreaRect(ref)
@@ -231,5 +231,28 @@ def zero_xy():
         print("NAO DEU")
 
 
+def sobe_servo():
+    ser.write(b'd')
+def desce_servo():
+    ser.write(b's')
+
 if __name__ == "__main__":
+    ser = serial.Serial('COM6')
+    sobe_servo()
     zero_xy()
+
+    gc.cleanFile()
+    gc.getInitialCode()
+    gc.moveLinear(Point(100, 100, 0))
+    gc.insertNewLine()
+
+    waitForMach3()
+    desce_servo()
+
+    sendDone()
+
+    waitForOK()
+    sobe_servo()
+    desce_servo()
+    waitForOK()
+    sobe_servo()
