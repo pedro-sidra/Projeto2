@@ -95,6 +95,8 @@ def parseArgs():
     ap.add_argument("-d", "--device", required=False, type=int,
                     default=0, help="device to use, int")
     ap.add_argument("--loadpics", action='store_true')
+    ap.add_argument("--takebgpics", action='store_true')
+    ap.add_argument("--bgsub", action='store_true')
     args = vars(ap.parse_args())
     return args
 
@@ -127,6 +129,13 @@ def findRelativeWorkpiecePosition(workpiece, reference):
 def readSavedTableImages():
     return [cv2.imread("mesa0.TIFF"), cv2.imread("mesa1.TIFF")]
 
+def getSubtractedBg(fgim, bgim):
+    bgim = cv2.cvtColor(bgim, cv2.COLOR_BGR2HSV)
+    fgim = cv2.cvtColor(fgim, cv2.COLOR_BGR2HSV)
+
+    diffs = np.abs(fgim.astype(int) - bgim.astype(int))
+
+    return cv2.cvtColor(diffs.astype(np.uint8), cv2.COLOR_HSV2BGR)
 
 def zero_xy():
     # Parse command line args and store them in a dict
@@ -152,6 +161,17 @@ def zero_xy():
 
     refWidthReal = 51
     refHeightReal = 38
+
+    if args['takebgpics']:
+        bgpics = takePicturesWithMachine(PICTURE_POINTS, device=args["device"])
+        for num, pic in enumerate(bgpics):
+            cv2.imwrite("bg"+str(num)+".TIFF", pic)
+        exit()
+    elif args['bgsub']:
+        bgpics = []
+        for num, _ in enumerate(PICTURE_POINTS):
+            bgpics.append(cv2.imread("bg"+str(num)+".TIFF"))
+
 
     # If the user requested to load images, read them
     # otherwise, take the pictures with the machine and write tem to mesa{0..n}
