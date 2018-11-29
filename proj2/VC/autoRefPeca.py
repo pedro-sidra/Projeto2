@@ -11,6 +11,7 @@ import pdb
 import cv2
 
 import serial
+import time
 
 
 # Teste de comunicacao com o Mach3!
@@ -148,7 +149,7 @@ def zero_xy():
         np.array((55.343,2.333)),
         np.array((407.70,1.29))
     ]
-    
+
     refWidthReal = 51
     refHeightReal = 38
 
@@ -207,52 +208,58 @@ def zero_xy():
         # cv2.line(stitched, (pwork[0],pwork[1]), (pref[0],pref[1]), (255,0,0) ,1 )
         # cv2.imshow("Posicao Realtiva",stitched)
 
-        gc = GCodeGenerator(5)
-
         relX = relPosPixels[0][1] * mmPerPixel
         relY = relPosPixels[0][0] * mmPerPixel
 
         Xref = relX + realRefPoint[0]
         Yref = relY + realRefPoint[1]
-
-
-        # maquina.vaiPra(x,y,z)
-        # maquina.zeraRef()
-        # maquina.rotacionaSCM(angulo)
-        gc.cleanFile()
-        gc.getInitialCode()
-        gc.moveLinear(Point(Xref, Yref, 0))
-        gc.setReference(Point(0, 0, 0))
-        gc.rotateCoordinateSystem(pieceAngle)
-        gc.insertNewLine()
-
-        waitForMach3()
+        return Xref, Yref, pieceAngle
     else:
         print("NAO DEU")
+        return None, None, None
 
 
-def sobe_servo():
+def sobe_servo(ser):
     ser.write(b'd')
-def desce_servo():
+    time.sleep(0.2)
+def desce_servo(ser):
     ser.write(b's')
+    time.sleep(0.2)
+    
 
 if __name__ == "__main__":
+    DIST_APALPADOR = 80
+    OFFS_APALPADOR = 20
+    
     ser = serial.Serial('COM6')
-    sobe_servo()
-    zero_xy()
+    time.sleep(3)
+    sobe_servo(ser)
+    Xref, Yref, pieceAngle = zero_xy()
 
+    # Set Coordinate System:
+    gc = GCodeGenerator(5)
     gc.cleanFile()
     gc.getInitialCode()
-    gc.moveLinear(Point(100, 100, 0))
+    gc.moveLinear(Point(Xref, Yref, 0))
+    gc.setReference(Point(0, 0, 0))
+    gc.moveLinear(Point(-DIST_APALPADOR, 0, 0))
+    gc.rotateCoordinateSystem(pieceAngle)
+    gc.enterRelativeMode()
+    gc.moveLinear(Point(OFFS_APALPADOR, OFFS_APALPADOR, 0))
+    gc.enterAbsoluteMode()
     gc.insertNewLine()
-
     waitForMach3()
-    desce_servo()
+
+
+    if Xref is None or Yref is None or pieceAngle is None:
+        raise Exception("No piece found")
+
+    desce_servo(ser)
 
     sendDone()
 
     waitForOK()
-    sobe_servo()
-    desce_servo()
-    waitForOK()
-    sobe_servo()
+    sobe_servo(ser)
+    ser.write(b'k')
+    open('toMach3.txt', 'w').close()
+    open('fromMach3.txt', 'w').close()

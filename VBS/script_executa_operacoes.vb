@@ -143,21 +143,6 @@ End If
 Open "C:\Users\Pedro\Documents\Code\Projeto2\fromMach3.txt" For Output As #1 ' Open file.
 Print #1, "ok" ' escreve a string para o arquivo
 Close
-MsgBox("Fazendo denovo...")
-If GetOemLed(825) <> 0 Then 'verifica se a probe ja ta no terra
-    Code "(Erro: Probe aterrada)" 'Mostra mensagem de erro
-Else 
-    'Desce e pega leitura de probe
-    Code "F300" 'feedrate pra descer
-    Code "G31Z-" & Zmax 'desce até tocar o apalpador
-    While IsMoving()
-    Wend
-    Zpiece = GetDro(2) 'armazena o valor medido pelo apalpador
-    SetUserDRO(1002, Zpiece)
-    Code "G0 Z0" 'sobe até zero pra recolher apalpador
-    
-End If
-
 MsgBox("Apalpado")
 
 Sleep(1000)
