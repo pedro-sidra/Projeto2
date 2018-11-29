@@ -144,6 +144,12 @@ Open "C:\Users\Pedro\Documents\Code\Projeto2\fromMach3.txt" For Output As #1 ' O
 Print #1, "ok" ' escreve a string para o arquivo
 Close
 MsgBox("Apalpado")
+EspessuraProbe = +0.5
+DistApalpBase = -62.3539
+offset = -5
+Zzero = GetUserDRO(1001) + GetUserDRO(1002) +  EspessuraProbe - DistApalpBase + offset
+Code "G0 X20 Y20 Z" & Zzero 'manda pra zero pra ver se deu boa
+Code "G92 Z0" 'zerou
 
 Sleep(1000)
 End If
