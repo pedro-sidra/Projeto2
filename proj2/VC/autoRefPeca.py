@@ -10,6 +10,8 @@ import time
 import pdb
 import cv2
 
+import serial
+
 
 # Teste de comunicacao com o Mach3!
 
@@ -125,7 +127,7 @@ def readSavedTableImages():
     return [cv2.imread("mesa0.TIFF"), cv2.imread("mesa1.TIFF")]
 
 
-def main():
+def zero_xy():
     # Parse command line args and store them in a dict
     args = parseArgs()
 
@@ -143,9 +145,12 @@ def main():
   
     # Calibrated points on the extremities of the reference tags
     PIECE_POINTS =[
-        np.array((28.7,6.78)),
-        np.array((425.1,0.62))
+        np.array((62,0)),
+        np.array((425,0))
     ]
+    
+    refWidthReal = 35
+    refHeightReal = 35
 
     # If the user requested to load images, read them
     # otherwise, take the pictures with the machine and write tem to mesa{0..n}
@@ -164,7 +169,6 @@ def main():
     chosenPictureidx = None
     minDist = None
 
-
     for i, pic in enumerate(pictures):
         print("Calibrate Reference:")
         ref = shapedetect.callibAndGetPiece(pic, 
@@ -178,10 +182,6 @@ def main():
         if ref is not None and piece is not None:
             relPosPixels, pwork, pref = findRelativeWorkpiecePosition(workpiece=piece, reference=ref)
             dist = np.linalg.norm(relPosPixels)
-        else:
-            dist = None
-
-        if dist is not None:
             if minDist is None or dist < minDist:
                 minDist = dist
                 chosenPictureidx = i
@@ -189,16 +189,13 @@ def main():
         refs.append(ref)
         pieces.append(piece)
 
-    # Finds ref and piece such that norm(relPos) is minimum
-    # (this means: minimum lenght of relPosPixels)
-    # TODO: urgently make this more readable, its 2AM right now
+    if chosenPictureidx is None:
+        raise Exception("No picture was chosen!")
+
     ref, piece, realRefPoint = refs[chosenPictureidx], pieces[chosenPictureidx], PIECE_POINTS[chosenPictureidx]
 
     pieceAngle = shapedetect.getAngle(piece, pwork, stitched)
     print("Angle: {:2f}".format(pieceAngle))
-    
-    refWidthReal = 35
-    refHeightReal = 35
 
     p, size, angle = cv2.minAreaRect(ref)
 
@@ -230,10 +227,9 @@ def main():
         gc.insertNewLine()
 
         waitForMach3()
-
     else:
         print("NAO DEU")
 
 
 if __name__ == "__main__":
-    main()
+    zero_xy()

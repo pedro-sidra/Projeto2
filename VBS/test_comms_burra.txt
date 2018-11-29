@@ -4,8 +4,7 @@ compok = 1
 compexit = 1
 
 While compexit <> 0
-	
-	Open "C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\toMach3.txt" For Input As #1 ' abre arquivo.
+	Open "C:\Users\Pedro\Documents\Code\Projeto2\toMach3.txt" For Input As #1 ' abre arquivo.
 	Line Input #1, TextLine ' lê a linha e coloca na variavel TextLine. 
 	Close #1 ' fecha o arquivo
 	
@@ -14,7 +13,7 @@ While compexit <> 0
 	
 	If compok = 0 Then 'se a string for "ok"
 	
-		LoadFile("C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\out.tap") 'carrega o código G
+		LoadFile("C:\Users\Pedro\Documents\Code\Projeto2\out.tap") 'carrega o código G
 
 		While IsLoading()
 		Wend
@@ -30,7 +29,7 @@ While compexit <> 0
 		
 		sleep(500)
 		
-		Open "C:\Users\Pedro\Documents\Code\Projeto2\VC\prova_conceito_py\fromMach3.txt" For Output As #1 ' Open file.
+		Open "C:\Users\Pedro\Documents\Code\Projeto2\fromMach3.txt" For Output As #1 ' Open file.
 		Print #1, "ok" ' escreve a string para o arquivo
 		Close
 	
@@ -39,7 +38,3 @@ While compexit <> 0
 
 Wend
 MsgBox "Done"
-
-
-
-

@@ -1,0 +1,1 @@
+{"highH": 126, "lowH": 1, "highS": 52, "lowS": 1, "highV": 197, "lowV": 1}
