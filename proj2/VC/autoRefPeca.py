@@ -265,7 +265,6 @@ if __name__ == "__main__":
     gc.cleanFile()
     gc.getInitialCode()
     gc.moveLinear(Point(Xref, Yref, 0))
-    gc.enterRelativeMode()
     gc.setReference(Point(0, 0, 0))
     gc.moveLinear(Point(-DIST_APALPADOR, 0, 0))
     gc.rotateCoordinateSystem(pieceAngle)

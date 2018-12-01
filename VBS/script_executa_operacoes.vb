@@ -158,4 +158,4 @@ Code "G0 X20 Y20 Z" & Zzero 'manda pra zero pra ver se deu boa
 Code "G92 Z0" 'zerou
 
 Sleep(1000)
-End If
+End If 
