@@ -18,10 +18,11 @@ l, a, b = cv2.split(lab)
 clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
 ca = clahe.apply(a)
 cb = clahe.apply(b)
+cl = clahe.apply(l)
 # cv2.imshow('CLAHE output', cl)
 
 #-----Merge the CLAHE enhanced L-channel with the a and b channel-----------
-limg = cv2.merge((l,ca,b))
+limg = cv2.merge((l,ca,cb))
 # cv2.imshow('limg', limg)
 
 #-----Converting image from LAB Color model to RGB model--------------------
