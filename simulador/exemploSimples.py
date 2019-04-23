@@ -41,7 +41,24 @@ def calc_shadow(sim_params, state):
 
     # Função deve retornar : x,y, NewState
     # NewState contém os novos valores das variáveis de estado desse cálculo return (*pShadow, state)
-    return (*pShadow,state)
+    return (*pShadow, state)
+
+
+def calc_alpha(sim_params, state):
+    theta = sim_params['theta']
+    points = sim_params['points']
+
+    x, y = points
+
+    alpha = np.arctan2((10-y),(x))
+    x_alpha = x[np.argmax(alpha)]
+    y_alpha = y[np.argmax(alpha)]
+
+    m = (y_alpha -  10)/(x_alpha)
+
+    return ([0, -14/m],
+            [10, -4],
+            state)
 
 
 # Calcula pelo método da "came" (laser)
@@ -62,7 +79,7 @@ def main():
     # Cria um objeto de simulador do 4o eixo
     # Ele mostra uma grade 2x3 de gráficos,
     # E usa 360 frames em uma rotação (1 frame/grau)
-    sim = Simulador4e(dims=(1, 2),
+    sim = Simulador4e(dims=(1, 3),
                       frames=360,)
 
     # para cada item da grade, adiciona:
@@ -81,9 +98,16 @@ def main():
                  color='bo-'
                  )
 
+    sim.add_piece((0, 2), color='k-')
+    sim.add_plot((0, 2),
+                 calc_alpha,
+                 color='yo-'
+                 )
+
 
     # Roda a simulação
     sim.run()
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     main()
