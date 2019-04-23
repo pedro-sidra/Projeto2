@@ -1,8 +1,11 @@
 """
-Matplotlib Animation Example
+Exemplo de animação usada no primeiro relatório
 
-Usado para testar animaçoes na matplotlib
+Exibe uma peça definida na variavel Points,
+rotacionando e mostrando dois raios de luz que atingem uma camera
 
+
+Informações sobre o autor do esqueleto que usei:
 author: Jake Vanderplas
 email: vanderplas@astro.washington.edu
 website: http://jakevdp.github.com

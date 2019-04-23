@@ -1,8 +1,11 @@
 """
-Matplotlib Animation Example
+Exemplo de animação usada no primeiro relatório
 
-Usado para testar animaçoes na matplotlib
+Exibe uma peça definida na variavel Points,
+rotacionando e mostrando duas alternativas de medida
 
+
+Informações sobre o autor do esqueleto que usei:
 author: Jake Vanderplas
 email: vanderplas@astro.washington.edu
 website: http://jakevdp.github.com
@@ -15,6 +18,16 @@ from matplotlib import pyplot as plt
 from matplotlib import animation
 
 FRAMES = 240
+
+points = np.array([
+    [1, 0],
+    [1, 0],
+    [-0.5, 1],
+    [-0.5, -1],
+])
+# circle_half = np.vstack((np.cos(np.linspace(1*np.pi,2*np.pi, 400)), np.sin(np.linspace(1*np.pi,2*np.pi, 400))))
+
+
 
 # First set up the figure, the axis, and the plot element we want to animate
 fig = plt.figure()
@@ -63,15 +76,6 @@ plot_came, plot_shadow = [ax.plot([], [], color, lw=2)[0]
                           for ax, color in ((ax_cameplot, 'r-'), (ax_shadowplot, 'g-'))]
 
 r_points = []
-
-points = np.array([
-    [1, 0],
-    [1, 0],
-    [-0.5, 1],
-    [-0.5, -1],
-])
-# circle_half = np.vstack((np.cos(np.linspace(1*np.pi,2*np.pi, 400)), np.sin(np.linspace(1*np.pi,2*np.pi, 400))))
-
 
 def sample_points_incomplete(points, n=10000):
     next_points = np.roll(points, -1, axis=(0))

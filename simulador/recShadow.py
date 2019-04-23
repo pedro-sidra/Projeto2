@@ -1,8 +1,15 @@
 """
-Matplotlib Animation Example
+Exemplo de animação usada no primeiro relatório
 
-Usado para testar animaçoes na matplotlib
+Exibe uma peça definida na variavel Points.
 
+Na coluna mais da direita, mostra a reconstrução da peça a partir do método
+da esquerda-inferior, usando dois métodos diferentes de reconstrução
+
+pode adicionar ruído
+
+
+Informações sobre o autor do esqueleto que usei:
 author: Jake Vanderplas
 email: vanderplas@astro.washington.edu
 website: http://jakevdp.github.com
