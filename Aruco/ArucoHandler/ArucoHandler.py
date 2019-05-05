@@ -4,6 +4,7 @@ import cv2
 from cv2 import aruco
 import numpy as np
 import xml.etree.ElementTree as ET
+from CameraHandler import *
 
 ID = 0
 OUTPUT_MARKER = f'marker_{ID}.jpg'
@@ -14,6 +15,7 @@ SIDE_PIXELS = 100
 class ArucoHandler(object):
 
     def __init__(self):
+        """Defines an ArucoHandler instance, responsible for getting aruco corners and pose from images."""
 
         window_mode = True
         verbose_mode = True
@@ -35,11 +37,14 @@ class ArucoHandler(object):
         # 2: _250 means the dictionary is composed of 250 markers
         self.dictionary = aruco.getPredefinedDictionary(aruco.DICT_6X6_50)
 
-    def __showImage(self, title, img):
+    def _showImage(self, title, img):
+        """Shows images, so while testing it's possible to see the result."""
 
-        cv2.imshow(title, img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        if self.window_mode:
+
+            cv2.imshow(title, img)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
 
     def __get4PointsFromCorners(self, corners):
 
@@ -63,6 +68,7 @@ class ArucoHandler(object):
         return pList
 
     def generateMarker(self, marker_id=ID, side_pixels=SIDE_PIXELS, output_file=OUTPUT_MARKER):
+        """Generate image with marker."""
 
         image = cv2.imread(output_file)
 
@@ -75,13 +81,13 @@ class ArucoHandler(object):
         img_with_marker = aruco.drawMarker(self.dictionary, marker_id, side_pixels, image, 1)
 
         if self.window_mode:
-            self.__showImage('Marker', img_with_marker)
+            self._showImage('Marker', img_with_marker)
 
         cv2.imwrite(OUTPUT_MARKER, img_with_marker)
 
     def detectMarkersInImage(self, img, ids = ID):
 
-        corners, ids, rejectedImgPoints = aruco.detectMarkers(img, self.dictionary, )
+        corners, ids, rejectedImgPoints = aruco.detectMarkers(img, self.dictionary, ids=ids)
 
         if self.verbose_mode:
             print(f'polygon corners: {corners[0][0]}')
@@ -93,14 +99,36 @@ class ArucoHandler(object):
 
         if self.window_mode:
             imgPoly = aruco.drawDetectedMarkers(img, corners, ids, GREEN)
-            self.__showImage('Detected Marker', imgPoly)
+            self._showImage('Detected Marker', imgPoly)
 
         return [corners, ids, rejectedImgPoints]
 
-    def estimateArucoAngles(self, corners, cameraMatrix, distCoeffs, markerLength=0.01, rvecs=None, tvecs=None, _objPoints=None):
+    def estimateArucoPose(self, img, corners, camera: CameraHandler, markerLength=0.01):
+        """
+        Returns rotation and translation vectors as well as position of aruco markers.
 
-        rvecs, tvecs, _objPoints = aruco.estimatePoseSingleMarkers(corners, markerLength, cameraMatrix, distCoeffs, rvecs, tvecs, _objPoints)
+        :param img: image to draw.
+        :param corners: vector of marker corners returned by the 'detectMarkersInImage' function
+        :param cameraMatrix: camera matrix obtained after calibration using cv::calibrateCamera
+        :param distCoeffs: camera distortion coefficients after calibration using cv::calibrateCamera
+        :param markerLength: size of length of marker in a distance unit (meters, for instance). Output vectors will be in the same unit.
 
-arc_handler = ArucoHandler()
-# arc_handler.generateMarker()
-arc_handler.detectMarkersInImage(cv2.imread("cloudsMarker.jpg"))
+        """
+
+        # rvecs: rotation vectors for each marker in 'corners'.
+        rvecs = None
+        # tvecs: translation vectors for each marker in 'corners'.
+        tvecs = None
+
+        cameraMatrix, distCoeffs = camera.getCalibrationData()
+
+        rvecs, tvecs, _objPoints = aruco.estimatePoseSingleMarkers(corners, markerLength,     # Marker information
+                                                                   cameraMatrix, distCoeffs,  # Camera information
+                                                                   rvecs, tvecs)              # R&T Vectors
+
+        imgWithAxes = aruco.drawAxis(img, cameraMatrix, distCoeffs, rvecs, tvecs, 2*markerLength)
+        self._showImage('Image with Axes', imgWithAxes)
+        cv2.waitKey(0)
+
+        return [rvecs, tvecs, _objPoints]
+
