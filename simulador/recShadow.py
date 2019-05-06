@@ -73,7 +73,7 @@ piece_came, piece_shadow = [ax.plot([], [], lw=2)[0]
                             for ax in (ax_came, ax_shadow)]
 
 rec_came, rec_shadow = [ax.plot([], [], color, lw=2)[0]
-                        for ax, color in ((ax_reccame, 'r-'), (ax_recshadow, 'g-'))]
+                        for ax, color in ((ax_reccame, 'r-'), (ax_recshadow, 'go'))]
 
 line_came, *lines_shadow = [ax.plot([], [], color, lw=2)[0]
                             for ax, color in ((ax_came, 'ro-'), (ax_shadow, 'k-'), (ax_shadow, 'go-'))]
@@ -194,7 +194,7 @@ def animate(i):
     global r_points, came_timeplot, shadow_timeplot, ax, theta, dtheta, lastshadow
     global shadow_recx, shadow_recy
 
-    noise = 0
+    noise = 1
 
     r_points = R@r_points
     theta += dtheta
