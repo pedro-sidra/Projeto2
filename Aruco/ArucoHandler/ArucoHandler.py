@@ -57,7 +57,7 @@ class ArucoHandler(object):
                 pList.append((p[0], p[1]))
 
             if self.verbose_mode:
-                print(f'p1: {pList[0]}')
+                print(f'\np1: {pList[0]}')
                 print(f'p2: {pList[1]}')
                 print(f'p3: {pList[2]}')
                 print(f'p4: {pList[3]}')
@@ -90,9 +90,20 @@ class ArucoHandler(object):
         corners, ids, rejectedImgPoints = aruco.detectMarkers(img, self.dictionary, ids=ids)
 
         if self.verbose_mode:
-            print(f'polygon corners: {corners[0][0]}')
-            print(f'ids[0]: {ids[0]}')
-            print(f'rejectedImgPoints[0]: {rejectedImgPoints[0]}')
+
+            print(f'\n--- Detecting Markers in Image ---')
+            try:
+                print(f'Polygon corners: {corners[0][0]}')
+            except:
+                print(f'\nNo corner found.\n')
+            try:
+                print(f'Ids[0]: {ids[0]}')
+            except:
+                print(f'\nNo id found.\n')
+            try:
+                print(f'RejectedImgPoints[0]: {rejectedImgPoints[0]}')
+            except:
+                print(f'\nNo point rejected.\n')
 
         if self.verbose_mode:
             self.__get4PointsFromCorners(corners)
@@ -129,6 +140,13 @@ class ArucoHandler(object):
         imgWithAxes = aruco.drawAxis(img, cameraMatrix, distCoeffs, rvecs, tvecs, 2*markerLength)
         self._showImage('Image with Axes', imgWithAxes)
         cv2.waitKey(0)
+
+        if self.verbose_mode:
+
+            print(f'\n--- Estimating Pose in Image ---')
+            print(f'rvecs: {rvecs}')
+            print(f'tvecs: {tvecs}')
+            print(f'_objPoints: {_objPoints}')
 
         return [rvecs, tvecs, _objPoints]
 
