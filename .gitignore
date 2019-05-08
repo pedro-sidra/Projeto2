@@ -3,6 +3,7 @@
 *.g
 *.jpeg
 *.jpg
+*.sw*
 *.TIFF
 toMach3.txt
 fromMach3.txt
