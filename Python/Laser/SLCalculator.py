@@ -1,24 +1,53 @@
 import cv2
 import numpy as np
 
+def lineFromVec(vec, x, y):
+    a, b = vec
+    c = -a * x - b*y
+    def f(x): return (-a*x-c)/b
+
+    return f, (a,b,c)
+
 class SLCalculator:
     """
     Structured Light Calculator
 
     Uses a line projected on a surface to compute heights
     """
+
     def __init__(self, refMask,
-                ppcm,
-                ):
+                 ppcm,
+                 ):
 
         # Init reference line params:
             # x limits (lower, upper)
             # eigenvectors (perp, parallel)
             # line function f(x) = a*x + b
-        self.xlims, self.eig, self.f = self._init_reference(refMask)
+        self.xlims, self.eig, (self.f, self.lineParams) = self._init_reference(
+            refMask)
 
         # Save pixels per cm
         self.ppcm = ppcm
+
+    def projectionVector(self, x, y):
+        v1, v2 = self.eig
+        v1 = v1/np.linalg.norm(v1)
+        v2 = v2/np.linalg.norm(v2)
+        b = self.f(0)
+        mean = self.mean
+
+        dist = self.dist_to_ref(x, y, signed=True)
+
+        pReta = np.array([x, y]) - dist*v2
+
+        return pReta, np.array([x, y])
+
+    def dist_to_ref(self, x, y, signed=False):
+        a, b, c = self.lineParams
+        if signed:
+            return (a*x + b*y + c)/np.sqrt(a**2+b**2)
+        else:
+            return np.abs(a*x + b*y + c)/np.sqrt(a**2+b**2)
 
     def _init_reference(self, mask):
         """
@@ -38,32 +67,32 @@ class SLCalculator:
         (mean,), eig = cv2.PCACompute(points.astype('float32'),
                                       mean=None)
 
-        xlims = (np.min(x),np.max(x))
-        print(eig)
-        eig = eig
-        f = self._computeLineEquation(eig, mean)
+        self.mean = mean
+
+        xlims = (np.min(x), np.max(x))
+        self.eig = eig
+        f = self._computeParallelLine(*mean)
 
         return xlims, eig, f
 
+    def perpLine(self,x,y):
+        return self._computePerpLine(x,y)[0]
 
-    def _computeLineEquation(self, eig, mean):
-        v1, v2 = eig
+    def _computePerpLine(self, x, y):
+        return lineFromVec(self.eig[0], x,y)
 
-        a, b = v2
-        c = -a * mean[0] - b*mean[1]
-        def f(x): return (-a*x-c)/b
-
-        return f
-
+    def _computeParallelLine(self, x, y):
+        return lineFromVec(self.eig[1], x,y )
 
     def draw_refLine(self, im,
-                    color=(0,0,255),
-                    width=8):
+                     color=(0, 0, 255),
+                     width=8):
         x1, x2 = self.xlims
         y1, y2 = self.f(x1), self.f(x2)
         cv2.line(im, (int(x1), int(y1)), (int(x2), int(y2)),
                  color,
                  width)
+
     def linePoints(self, samples=100, asInt=True):
         x1, x2 = self.xlims
         px = np.linspace(x1, x2, samples)

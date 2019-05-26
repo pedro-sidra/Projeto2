@@ -4,7 +4,7 @@ import numpy as np
 
 from SLCalculator import SLCalculator
 
-REF_PHOTO = "/home/estudos/Pictures/Projeto2/TesteLaser/ref.jpg"
+REF_PHOTO = "/home/estudos/Pictures/Projeto2/TesteLaser/inclinadoBorr.jpg"
 PIECE_PHOTO = "/home/estudos/Pictures/Projeto2/TesteLaser/inclinadoBorr.jpg"
 PARAMS = "params.json"
 
@@ -103,16 +103,44 @@ def get_ref_points(mask):
 
     return points.T.astype(np.int32), eig
 
-
 im = cv2.imread(REF_PHOTO)
 mask = get_mask(im, calib=True)
 SL = SLCalculator(refMask=mask, ppcm = PIXELS_PER_CM)
 SL.draw_refLine(im)
+imref = im.copy()
 
-cv2.imshow("Rolou?", im)
-cv2.waitKey(-1)
+pointa,pointb = 0,0
+k=0
+def click_and_crop(event, x, y, flags, param):
+    global point, SL, im
+    if event == cv2.EVENT_MOUSEMOVE:
+        pointa, pointb = SL.projectionVector(x,y)
+        print(SL.eig)
+        im = imref.copy()
+        cv2.line(im, (*pointa.astype(np.int32),), (*pointb.astype(np.int32),),
+                (0,0,255), 8)
+        dist = SL.dist_to_ref(x,y, signed=True)/PIXELS_PER_CM
+        dist = round(dist,2)
+        xcm, ycm = x/PIXELS_PER_CM, y/PIXELS_PER_CM
+        xcm, ycm = round(xcm,2), round(ycm,2)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        cv2.putText(im,f'({xcm},{ycm})cm',(x,y),
+                    font, 1,(255,255,255),2,cv2.LINE_AA)
+        cv2.putText(im,f'dist={dist}cm',(x,y+50),
+                    font, 1,(255,255,255),2,cv2.LINE_AA)
 
 
+# cv2.imshow("Rolou?", im)
+# cv2.waitKey(-1)
+
+cv2.namedWindow("result")
+cv2.setMouseCallback("result", click_and_crop)
+
+while k != ord('q'):
+    cv2.imshow("result", im)
+    k = cv2.waitKey(10)
+
+print(SL.lineParams)
 # im = cv2.imread(PIECE_PHOTO)
 # mask_piece = get_mask(im, calib=True)
 
@@ -124,9 +152,6 @@ cv2.waitKey(-1)
 # k = ''
 # cv2.namedWindow("result")
 # cv2.waitKey()
-# while k != ord('q'):
-#     cv2.imshow("result", im)
-#     k = cv2.waitKey(10)
 
 # y,x = np.nonzero(mask_piece)
 # piece_points = np.vstack((x, y))
