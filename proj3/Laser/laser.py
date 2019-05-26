@@ -2,6 +2,8 @@ import cv2
 import json
 import numpy as np
 
+from SLCalculator import SLCalculator
+
 REF_PHOTO = "/home/estudos/Pictures/Projeto2/TesteLaser/ref.jpg"
 PIECE_PHOTO = "/home/estudos/Pictures/Projeto2/TesteLaser/inclinadoBorr.jpg"
 PARAMS = "params.json"
@@ -103,43 +105,44 @@ def get_ref_points(mask):
 
 
 im = cv2.imread(REF_PHOTO)
-mask = get_mask(im, calib=False)
-mask_points, eig = get_ref_points(mask)
+mask = get_mask(im, calib=True)
+SL = SLCalculator(refMask=mask, ppcm = PIXELS_PER_CM)
+SL.draw_refLine(im)
 
-vperp =eig[1]
-
-im = cv2.imread(PIECE_PHOTO)
-mask_piece = get_mask(im, calib=True)
-
-cv2.line(im, (int(mask_points[0, 0]), int(mask_points[0, 1])), (int(
-    mask_points[-1, 0]), int(mask_points[-1, 1])), (0, 0, 255), 8)
-
-contours, _ = cv2.findContours(mask_piece, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-cv2.drawContours(im, contours, -1, (0, 0, 0), 6)
+cv2.imshow("Rolou?", im)
+cv2.waitKey(-1)
 
 
-k = ''
-cv2.namedWindow("result")
-cv2.waitKey()
-while k != ord('q'):
-    cv2.imshow("result", im)
-    k = cv2.waitKey(10)
+# im = cv2.imread(PIECE_PHOTO)
+# mask_piece = get_mask(im, calib=True)
 
-y,x = np.nonzero(mask_piece)
-piece_points = np.vstack((x, y))
-piece_points = piece_points.swapaxes(0, 1)
 
-ds = np.zeros(mask_points.shape[0])
-for i, point in enumerate(mask_points):
-    dists = np.abs(np.dot(piece_points-point, vperp)/np.linalg.norm(piece_points-point,axis=-1))
-    dists = np.nan_to_num(dists)
+# contours, _ = cv2.findContours(mask_piece, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+# cv2.drawContours(im, contours, -1, (0, 0, 0), 6)
 
-    if np.isclose(np.max(dists),1):
-        idx = np.argmax(dists)
-        ds[i] = np.linalg.norm(piece_points[idx] - point)
-    else:
-        ds[i]=0
 
-import matplotlib.pyplot as plt
-plt.plot(17.9/36*ds/PIXELS_PER_CM)
-plt.show()
+# k = ''
+# cv2.namedWindow("result")
+# cv2.waitKey()
+# while k != ord('q'):
+#     cv2.imshow("result", im)
+#     k = cv2.waitKey(10)
+
+# y,x = np.nonzero(mask_piece)
+# piece_points = np.vstack((x, y))
+# piece_points = piece_points.swapaxes(0, 1)
+
+# ds = np.zeros(mask_points.shape[0])
+# for i, point in enumerate(mask_points):
+#     dists = np.abs(np.dot(piece_points-point, vperp)/np.linalg.norm(piece_points-point,axis=-1))
+#     dists = np.nan_to_num(dists)
+
+#     if np.isclose(np.max(dists),1):
+#         idx = np.argmax(dists)
+#         ds[i] = np.linalg.norm(piece_points[idx] - point)
+#     else:
+#         ds[i]=0
+
+# import matplotlib.pyplot as plt
+# plt.plot(17.9/36*ds/PIXELS_PER_CM)
+# plt.show()

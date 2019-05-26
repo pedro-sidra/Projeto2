@@ -1,3 +1,6 @@
+import cv2
+import numpy as np
+
 class SLCalculator:
     """
     Structured Light Calculator
@@ -12,7 +15,7 @@ class SLCalculator:
             # x limits (lower, upper)
             # eigenvectors (perp, parallel)
             # line function f(x) = a*x + b
-        self.xlims, self.eig, self.f = sef._init_reference(refMask)
+        self.xlims, self.eig, self.f = self._init_reference(refMask)
 
         # Save pixels per cm
         self.ppcm = ppcm
@@ -36,6 +39,7 @@ class SLCalculator:
                                       mean=None)
 
         xlims = (np.min(x),np.max(x))
+        print(eig)
         eig = eig
         f = self._computeLineEquation(eig, mean)
 
@@ -45,14 +49,21 @@ class SLCalculator:
     def _computeLineEquation(self, eig, mean):
         v1, v2 = eig
 
-        dx, dy = v1
-        a = dy/dx
-        b = mean[1] - a*mean[0]
-        def f(x): return a*x+b
+        a, b = v2
+        c = -a * mean[0] - b*mean[1]
+        def f(x): return (-a*x-c)/b
 
         return f
 
 
+    def draw_refLine(self, im,
+                    color=(0,0,255),
+                    width=8):
+        x1, x2 = self.xlims
+        y1, y2 = self.f(x1), self.f(x2)
+        cv2.line(im, (int(x1), int(y1)), (int(x2), int(y2)),
+                 color,
+                 width)
     def linePoints(self, samples=100, asInt=True):
         x1, x2 = self.xlims
         px = np.linspace(x1, x2, samples)
