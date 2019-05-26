@@ -7,9 +7,12 @@ import time
 
 # region Defined Constants
 
-DEFAULT_N_OF_SAMPLE = 5#72
+IS_SIMULATING_MACH3 = True
+SIMULATION_SLEEP = 0.050
+
+DEFAULT_N_OF_SAMPLE = 100
 DEFAULT_FOLDER_OF_PICTURES = './TimedPictures'
-DEFAULT_TIME_BETWEEN_PICS_S = 1#0.5
+DEFAULT_TIME_BETWEEN_PICS_S = 0.1
 
 # endregion
 
@@ -19,6 +22,12 @@ def getTimedPictures(n_of_samples=DEFAULT_N_OF_SAMPLE,
 
     # Prepares Camera. It's possible to change here for a specific camera instead of using a generic CameraHandler.
     ch = CameraHandler()
+
+    # region Prepares Mach3 simulation
+    fMach3 = None
+    if IS_SIMULATING_MACH3:
+        fMach3 = open('./TimedAngles/angle.txt', mode='w', encoding='UTF-8', errors='ignore')
+    # endregion
 
     # region Clean TimedPictures folder to avoid filling the HD in the future
     # Source of this part of the code:
@@ -41,7 +50,14 @@ def getTimedPictures(n_of_samples=DEFAULT_N_OF_SAMPLE,
     # region Takes pictures and keeps timestamp in number of seconds since the epoch, as seconds
     listPic = []
     listTime = []
+    lastSimulatedAngle = 0
     for idx in range(n_of_samples):
+
+        if IS_SIMULATING_MACH3:
+            ts = time.time()
+            lastSimulatedAngle+=1
+            fMach3.write(f'{lastSimulatedAngle}\t{ts}\n')
+            time.sleep(SIMULATION_SLEEP)
 
         image = ch.takePicture()
         ts = time.time()
@@ -54,10 +70,8 @@ def getTimedPictures(n_of_samples=DEFAULT_N_OF_SAMPLE,
     # region Saves all pictures and timestamp file
     with open('./TimedPictures/timeRelation.txt', 'w', encoding='UTF-8', errors='ignore') as f:
         for i, image in enumerate(listPic):
-            cv2.imwrite(f'./TimedPictures/{i}.jpg', image,)
+            cv2.imwrite(f'./TimedPictures/{i}_{listTime[i]}.jpg', image,)
             f.write(f'./TimedPictures/{i}.jpg\t{listTime[i]}\n')
     # endregion
 
-    return (listPic, listTime)
-
-relation = getTimedPictures()
+    return listTime, listPic
