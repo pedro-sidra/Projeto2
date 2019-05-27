@@ -78,7 +78,7 @@ def get_mask(im, calib=True):
 def parseArgs():
     # Parse arguments
     ap = argparse.ArgumentParser(description="Shows a demo of the projection into the line reference")
-    ap.add_argument("picture", help="filepath of the picture to use")
+    ap.add_argument("picture", help="filepath of the ref. picture to use")
     ap.add_argument("-s", "--show_picture", help="picture to show instead of the ref")
     ap.add_argument("--height", action="store_true", help="calculate and show height")
     ap.add_argument("--ppcm", type=int, help="Pixels per cm on the pictures",

@@ -17,6 +17,7 @@ class SLCalculator:
 
     def __init__(self, refMask,
                  ppcm,
+                 tanLaserAngle
                  ):
 
         # Init reference line params:
@@ -28,6 +29,10 @@ class SLCalculator:
 
         # Save pixels per cm
         self.ppcm = ppcm
+
+        self.tanAlfa = tanLaserAngle
+
+        self.heightFactor = self.tanAlfa/ppcm
 
     def projectionVector(self, x, y):
         v1, v2 = self.eig
@@ -67,13 +72,38 @@ class SLCalculator:
         (mean,), eig = cv2.PCACompute(points.astype('float32'),
                                       mean=None)
 
+        v1, v2 = eig
+
         self.mean = mean
+        self.eig = eig
 
         xlims = (np.min(x), np.max(x))
-        self.eig = eig
         f = self._computeParallelLine(*mean)
 
         return xlims, eig, f
+
+    def calc_heights(self, mask, filter=True):
+
+        xmin, _ = self.xlims
+
+        y,x = np.nonzero(mask)
+        piece_points = np.vstack((x-xmin, y-self.f(xmin))).astype(np.float32)
+
+        projected_piece_points = np.linalg.inv(self.eig)@piece_points
+
+        projected_piece_points[1,:]*=self.heightFactor
+        projected_piece_points[0,:]/=self.ppcm
+
+        if filter:
+            x, heights = projected_piece_points
+            inds = np.argsort(x)
+            x = x[inds]
+            heights = heights[inds]
+            x = x[heights > 0.5]
+            heights = heights[heights > 0.5]
+            return x,heights
+
+        return projected_piece_points
 
     def perpLine(self,x,y):
         return self._computePerpLine(x,y)[0]
@@ -102,4 +132,5 @@ class SLCalculator:
             points = np.round(np.array((px, py)))
             return points.T.astype(np.int32)
         else:
+            points = np.array((px, py))
             return points.T

@@ -194,7 +194,7 @@ def animate(i):
     global r_points, came_timeplot, shadow_timeplot, ax, theta, dtheta, lastshadow
     global shadow_recx, shadow_recy
 
-    noise = 1
+    noise = 0
 
     r_points = R@r_points
     theta += dtheta

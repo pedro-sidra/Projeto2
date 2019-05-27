@@ -118,18 +118,10 @@ if __name__=="__main__":
     cv2.imshow("Rolou?", piece_im)
     cv2.waitKey(-1)
 
-    x, heights = SL.calc_heights(piece_mask, filter=False)
-
-    ypic, xpic = np.nonzero(piece_mask)
-    for xim, yim, height in zip(xpic, ypic, heights):
-        piece_im[yim,xim] = (0,0,abs(int(255*height/max(heights))))
+    x, heights = SL.calc_heights(piece_mask, filter=True)
         # return 17.9/36*ds/self.ppcm
 
     import matplotlib.pyplot as plt
-
-    cv2.imshow("Rolou?", piece_im)
-    cv2.waitKey(-1)
-
 
     plt.plot(x,heights, 'bo')
     plt.show()
