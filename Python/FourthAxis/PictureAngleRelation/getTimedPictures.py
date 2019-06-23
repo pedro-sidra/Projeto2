@@ -9,12 +9,51 @@ import time
 
 IS_SIMULATING_MACH3 = True
 SIMULATION_SLEEP = 0.050
+SECONDS_PER_HOUR = 3600
+SECONDS_PER_MINUTE = 60
 
 DEFAULT_N_OF_SAMPLE = 100
 DEFAULT_FOLDER_OF_PICTURES = './TimedPictures'
 DEFAULT_TIME_BETWEEN_PICS_S = 0.1
 
 # endregion
+
+def getSecondsOfTheDay() -> int:
+    """Returns number of seconds since the beginning of the day."""
+
+    # Gets time in seconds since Epoch
+    t = time.time()
+
+    # Gets time struct
+    localTime = time.localtime(t)
+
+    # Converts to h:m:s informations
+    h, m, s = localTime.tm_hour, localTime.tm_min, localTime.tm_sec
+    # print(f'\n{h}:{m}:{s}')
+
+    # Converts to seconds since the beginning of the day
+    daySeconds = h * SECONDS_PER_HOUR + m * SECONDS_PER_MINUTE + s
+
+    return daySeconds
+
+def convertSecOfDayToHMS(s: int) -> str:
+    """Returns the string h:m:s using the input, which is the number of the seconds elapsed since the beginning of the day."""
+
+    h = 0
+    m = 0
+
+    # Gets hours
+    if (s / SECONDS_PER_HOUR) >= 0:
+        h = int(s / SECONDS_PER_HOUR)
+        s -= h * SECONDS_PER_HOUR
+
+    # Gets minutes
+    if (s / SECONDS_PER_MINUTE) >= 0:
+        m = int(s / SECONDS_PER_MINUTE)
+        s -= m * SECONDS_PER_MINUTE
+
+    # The seconds are the remaining
+    return f'{h}:{m}:{s}'
 
 def getTimedPictures(n_of_samples=DEFAULT_N_OF_SAMPLE,
                      time_bt_pics=DEFAULT_TIME_BETWEEN_PICS_S,
@@ -47,20 +86,20 @@ def getTimedPictures(n_of_samples=DEFAULT_N_OF_SAMPLE,
 
     # endregion
 
-    # region Takes pictures and keeps timestamp in number of seconds since the epoch, as seconds
+    # region Takes pictures and keeps timestamp in number of seconds since the start of the day
     listPic = []
     listTime = []
     lastSimulatedAngle = 0
     for idx in range(n_of_samples):
 
         if IS_SIMULATING_MACH3:
-            ts = time.time()
+            ts = getSecondsOfTheDay()
             lastSimulatedAngle+=1
             fMach3.write(f'{lastSimulatedAngle}\t{ts}\n')
             time.sleep(SIMULATION_SLEEP)
 
         image = ch.takePicture()
-        ts = time.time()
+        ts = getSecondsOfTheDay()
 
         listPic.append(image)
         listTime.append(ts)
