@@ -1,11 +1,11 @@
 import cv2
 import numpy as np
-from ..CameraHandler.CameraHandler import CameraHandlerFromFile
+from CameraHandler.CameraHandler import CameraHandlerFromFile
 import pdb
 
 pdb.set_trace()
-cap = CameraHandlerFromFile(file="/home/estudos/code/Projeto2/Python/CameraHandler/camera_params.npz",
-                            device=1)
+cap = CameraHandlerFromFile(file="../CameraHandler/camera_params.npz",
+                            device=0)
 i = 0
 
 while True:

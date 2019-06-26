@@ -1,8 +1,8 @@
 import sys
 
-from ..CameraHandler.CameraHandler import CameraHandlerFromFile
-import proj2.
-from proj2.GCodeGenerator.GCodeGenerator import *
+from CameraHandler.CameraHandler import CameraHandlerFromFile
+from GCodeGenerator.GCodeGenerator import *
+from VC import shapedetect
 
 import argparse
 import numpy as np
@@ -253,7 +253,7 @@ if __name__ == "__main__":
     DIST_APALPADOR = 80
     OFFS_APALPADOR = 20
     
-    ser = serial.Serial('COM6')
+    ser = serial.Serial('COM4')
     time.sleep(3)
     sobe_servo(ser)
     Xref, Yref, pieceAngle = zero_xy()
