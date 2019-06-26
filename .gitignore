@@ -1,4 +1,6 @@
 *.png
+*.npy
+*.npz
 *.tap
 *.g
 *.jpeg
