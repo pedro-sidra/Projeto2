@@ -1,7 +1,7 @@
 import sys
 
-
-import proj2.VC.shapedetect as shapedetect
+from ..CameraHandler.CameraHandler import CameraHandlerFromFile
+import proj2.
 from proj2.GCodeGenerator.GCodeGenerator import *
 
 import argparse
@@ -56,13 +56,11 @@ def waitForMach3():
 
 
 # Comunicacao feita com arquivos de texto (aham...)
-def takePicturesWithMachine(picturePositions, desiredFeedRate=500, device: int = None):
+def takePicturesWithMachine(picturePositions, desiredFeedRate=500, device = 1):
     # gerador de codigo G (clauser <3)
     gc = GCodeGenerator(5)
-    if device is None:
-        cap = cv2.VideoCapture(0)
-    else:
-        cap = cv2.VideoCapture(device)
+    cap = CameraHandlerFromFile("/home/estudos/code/Projeto2/Python/CameraHandler/camera_params.npz",
+                               device=device)
 
     # initialize empty vector for the pictures
     picturesTaken = []

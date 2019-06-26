@@ -5,11 +5,11 @@ import pdb
 
 pdb.set_trace()
 cap = CameraHandlerFromFile(file="/home/estudos/code/Projeto2/Python/CameraHandler/camera_params.npz",
-                            device=2)
+                            device=1)
 i = 0
 
 while True:
-    img = cap.read()
+    _, img = cap.read()
     imgflip = cv2.flip(img, 0)
     print(img.shape)
     cv2.imshow("ola", img)

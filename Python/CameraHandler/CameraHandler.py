@@ -4,8 +4,7 @@ import cv2
 
 
 class CameraHandler(object):
-
-    def __init__(self):
+    def __init__(self, device=0, startup_cam=False):
         """Instantiates a generic camera with no predefined data regarding camera matrix or distortion coefficients."""
 
         # Calibration data
@@ -13,8 +12,11 @@ class CameraHandler(object):
         self.distCoeff = None
 
         # Camera information
-        self.device = 0
+        self.device = device
         self.videoCapture = None
+
+        if startup_cam:
+            self._initVideoCapture()
 
     def getCalibrationData(self) -> list:
         """Returns the calibration data of the camera: [cameraMatrix, distCoeff]
@@ -23,16 +25,15 @@ class CameraHandler(object):
 
         return [self.cameraMatrix, self.distCoeff]
 
-    def takePicture(self):
-        """Takes a picture and returns its image."""
-
+    def _initVideoCapture(self):
         if self.videoCapture is None:
             self.videoCapture = cv2.VideoCapture(self.device)
-
             # Check success in openning device
             if not self.videoCapture.isOpened():
                 raise IOError("Couldn't open video device.")
 
+    def takePicture(self):
+        """Takes a picture and returns its image."""
         # Captures picture
         success, image = self.videoCapture.read()
 
@@ -57,7 +58,8 @@ class CameraHandlerFromFile(CameraHandler):
     def __init__(self, file, device=0):
         """Defines a specific camera from a .npz file containing camera coefs."""
 
-        super().__init__()
+        super().__init__(device=device, startup_cam=True)
+        print("HAAAA")
 
         contents = np.load(file)
         self.cameraMatrix = contents['mtx']
@@ -70,7 +72,6 @@ class CameraHandlerFromFile(CameraHandler):
         self.setResolution((1280, 960))
 
         img = self.takePicture()
-
         h,  w = img.shape[:2]
         self.optCameraMtx, self.roi = cv2.getOptimalNewCameraMatrix(
             self.cameraMatrix, self.distCoeff,
@@ -87,10 +88,10 @@ class CameraHandlerFromFile(CameraHandler):
                            self.distCoeff, None,
                            self.optCameraMtx,
                            )
-        # crop the image
+
         x, y, w, h = self.roi
         ret = ret[y:y+h, x:x+w]
-        return ret
+        return True, ret
 
 
 class NotebookCamera(CameraHandler):
