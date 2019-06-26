@@ -1,12 +1,14 @@
 import cv2
 import numpy as np
 
+
 def lineFromVec(vec, x, y):
     a, b = vec
     c = -a * x - b*y
     def f(x): return (-a*x-c)/b
 
-    return f, (a,b,c)
+    return f, (a, b, c)
+
 
 class SLCalculator:
     """
@@ -17,7 +19,8 @@ class SLCalculator:
 
     def __init__(self, refMask,
                  ppcm,
-                 tanLaserAngle
+                 tanLaserAngle,
+                 axisCenter=(0, 0)
                  ):
 
         # Init reference line params:
@@ -29,6 +32,8 @@ class SLCalculator:
 
         # Save pixels per cm
         self.ppcm = ppcm
+
+        self.axisCenter = axisCenter
 
         self.tanAlfa = tanLaserAngle
 
@@ -86,33 +91,38 @@ class SLCalculator:
 
         xmin, _ = self.xlims
 
-        y,x = np.nonzero(mask)
-        piece_points = np.vstack((x-xmin, y-self.f(xmin))).astype(np.float32)
+        xcenter, zcenter = self.axisCenter
+
+        y, x = np.nonzero(mask)
+        piece_points = np.vstack((x-xcenter, y-self.f(xcenter))).astype(np.float32)
 
         projected_piece_points = np.linalg.inv(self.eig)@piece_points
 
-        projected_piece_points[1,:]*=self.heightFactor
-        projected_piece_points[0,:]/=self.ppcm
+        projected_piece_points[1, :] *= self.heightFactor
+        projected_piece_points[0, :] /= self.ppcm
 
         if filter:
             x, heights = projected_piece_points
             inds = np.argsort(x)
             x = x[inds]
             heights = heights[inds]
-            x = x[heights > 0.5]
-            heights = heights[heights > 0.5]
-            return x,heights
+            x = x[heights > 2]
+            heights = heights[heights > 2]
+
+            # x = (31.47-heights)*x/31.47
+            heights -= zcenter
+            return x, heights
 
         return projected_piece_points
 
-    def perpLine(self,x,y):
-        return self._computePerpLine(x,y)[0]
+    def perpLine(self, x, y):
+        return self._computePerpLine(x, y)[0]
 
     def _computePerpLine(self, x, y):
-        return lineFromVec(self.eig[0], x,y)
+        return lineFromVec(self.eig[0], x, y)
 
     def _computeParallelLine(self, x, y):
-        return lineFromVec(self.eig[1], x,y )
+        return lineFromVec(self.eig[1], x, y)
 
     def draw_refLine(self, im,
                      color=(0, 0, 255),
