@@ -4,4 +4,4 @@ Projeto de visao computacional para referenciamento automatico de ferramenta e p
 
 # Projeto 3
 
-Projeto de visao computacional para referenciamento automatico de quarto eixo
+Projeto de visao computacional para referenciamento automatico de quarto eixo.
