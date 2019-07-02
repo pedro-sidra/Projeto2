@@ -8,13 +8,12 @@ M = np.load("camera_mtx.npy")
 
 #Gets uv position from XY spacial coordinates and a given z height
 def Get_uv(x,y,z):
-    u,v=M*[x;y]/z
+  P=np.array([[x],[y]])
+    u,v=M@P/z
     return u,v
 
 #Gets XY coordinates from pixel position(u,v) and a given z height
 def Get_xy(u,v,z):
-    x,y=np.linalg.inv(M)*[u;v]/z #inverse matrix
+    P=np.array([[x],[y]])
+    x,y=np.linalg.inv(M)@P/z #inverse matrix
     return x,y
-
-
-
