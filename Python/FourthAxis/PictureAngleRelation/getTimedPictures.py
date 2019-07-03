@@ -4,35 +4,39 @@ relation between the time and the respective picture in order to prepare a seque
 import os, shutil
 from FourthAxis.CameraHandler import *
 import time
+import random
 
 # region Defined Constants
 
-IS_SIMULATING_MACH3 = True
+IS_SIMULATING_MACH3 = False
 SIMULATION_SLEEP = 0.050
 SECONDS_PER_HOUR = 3600
 SECONDS_PER_MINUTE = 60
 
-DEFAULT_N_OF_SAMPLE = 100
+DEFAULT_N_OF_SAMPLE = 600
 DEFAULT_FOLDER_OF_PICTURES = './TimedPictures'
-DEFAULT_TIME_BETWEEN_PICS_S = 0.1
+DEFAULT_TIME_BETWEEN_PICS_S = 0.05
+
+MACH3_ANGLES_FILE = './TimedAngles/angle.txt'
+random.seed()
 
 # endregion
 
-def getSecondsOfTheDay() -> int:
+def getSecondsOfTheDay() -> float:
     """Returns number of seconds since the beginning of the day."""
 
     # Gets time in seconds since Epoch
     t = time.time()
+    t_fraction = t - int(t)
 
     # Gets time struct
     localTime = time.localtime(t)
 
     # Converts to h:m:s informations
     h, m, s = localTime.tm_hour, localTime.tm_min, localTime.tm_sec
-    # print(f'\n{h}:{m}:{s}')
 
     # Converts to seconds since the beginning of the day
-    daySeconds = h * SECONDS_PER_HOUR + m * SECONDS_PER_MINUTE + s
+    daySeconds = h * SECONDS_PER_HOUR + m * SECONDS_PER_MINUTE + s + t_fraction
 
     return daySeconds
 
@@ -41,6 +45,7 @@ def convertSecOfDayToHMS(s: int) -> str:
 
     h = 0
     m = 0
+    s = int(s)
 
     # Gets hours
     if (s / SECONDS_PER_HOUR) >= 0:
@@ -65,7 +70,7 @@ def getTimedPictures(n_of_samples=DEFAULT_N_OF_SAMPLE,
     # region Prepares Mach3 simulation
     fMach3 = None
     if IS_SIMULATING_MACH3:
-        fMach3 = open('./TimedAngles/angle.txt', mode='w', encoding='UTF-8', errors='ignore')
+        fMach3 = open(MACH3_ANGLES_FILE, mode='w', encoding='UTF-8', errors='ignore')
     # endregion
 
     # region Clean TimedPictures folder to avoid filling the HD in the future
@@ -93,9 +98,10 @@ def getTimedPictures(n_of_samples=DEFAULT_N_OF_SAMPLE,
     for idx in range(n_of_samples):
 
         if IS_SIMULATING_MACH3:
-            ts = getSecondsOfTheDay()
-            lastSimulatedAngle+=1
-            fMach3.write(f'{lastSimulatedAngle}\t{ts}\n')
+            for i in range(int(random.random()*4)):
+                ts = getSecondsOfTheDay()
+                lastSimulatedAngle+=1
+                fMach3.write(f'{lastSimulatedAngle}\t{ts}\n')
             time.sleep(SIMULATION_SLEEP)
 
         image = ch.takePicture()
@@ -107,6 +113,7 @@ def getTimedPictures(n_of_samples=DEFAULT_N_OF_SAMPLE,
     # endregion
 
     # region Saves all pictures and timestamp file
+    print('\tSaving timed pictures...')
     with open('./TimedPictures/timeRelation.txt', 'w', encoding='UTF-8', errors='ignore') as f:
         for i, image in enumerate(listPic):
             cv2.imwrite(f'./TimedPictures/{i}_{listTime[i]}.jpg', image,)
