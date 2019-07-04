@@ -34,6 +34,9 @@ def morphCloseThenOpen(mask):
 with open(PARAMS, 'r') as f:
     params_init = json.loads(f.read())
 
+with open("paramsLAB.json", 'r') as f:
+    paramsLAB_init = json.loads(f.read())
+
 params = {
     "highH": 180,
     "lowH": 180,
@@ -43,6 +46,14 @@ params = {
     "highV": 255,
 }
 
+paramsLAB = {
+    "lowL": 255,
+    "highL": 255,
+    "lowA": 255,
+    "highA": 255,
+    "lowB": 255,
+    "highB": 255,
+        }
 
 def nothing(x):
     pass
@@ -87,6 +98,47 @@ def get_mask(im, calib=True):
     with open(PARAMS, 'w')as f:
         f.write(json.dumps(params))
     return mask
+
+def get_mask_lab(im, calib=True):
+    im_LAB = cv2.cvtColor(im, cv2.COLOR_BGR2LAB)
+
+    if not calib:
+        LASER_LOWER = np.array(
+            [paramsLAB_init['lowL'], paramsLAB_init['lowA'], paramsLAB_init['lowB']])
+        LASER_UPPER = np.array(
+            [paramsLAB_init['highL'], paramsLAB_init['highA'], paramsLAB_init['highB']])
+        mask = cv2.inRange(im_LAB, LASER_LOWER, LASER_UPPER)
+        mask = morphCloseThenOpen(mask)
+        return mask
+
+    cv2.namedWindow("Calibrate Mask")
+    for paramName, value in paramsLAB.items():
+        cv2.createTrackbar(paramName, 'Calibrate Mask',
+                           paramsLAB_init[paramName], value, nothing)
+
+    cv2.namedWindow("Pic", cv2.WINDOW_NORMAL)
+    k = ''
+    while k != ord('q'):
+        k = cv2.waitKey(5)
+
+        for key, value in paramsLAB.items():
+            paramsLAB[key] = cv2.getTrackbarPos(key, 'Calibrate Mask')
+
+        LASER_LOWER = np.array(
+            [paramsLAB['lowL'], paramsLAB['lowA'], paramsLAB['lowB']])
+        LASER_UPPER = np.array(
+            [paramsLAB['highL'], paramsLAB['highA'], paramsLAB['highB']])
+
+        mask = cv2.inRange(im_LAB, LASER_LOWER, LASER_UPPER)
+        mask = morphCloseThenOpen(mask)
+
+        cv2.imshow("Pic", im)
+        cv2.imshow("Calibrate Mask", mask)
+
+    with open("paramsLAB.json", 'w')as f:
+        f.write(json.dumps(paramsLAB))
+    return mask
+
 
 def meanFilter(vec, w=2):
     v = vec
