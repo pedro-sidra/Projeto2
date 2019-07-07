@@ -3,6 +3,7 @@ relation between the time and the respective picture in order to prepare a seque
 
 import os, shutil
 from CameraHandler.CameraHandler import *
+from Mach3.Mach3Communication import *
 import time
 import random
 
@@ -13,9 +14,9 @@ SIMULATION_SLEEP = 0.050
 SECONDS_PER_HOUR = 3600
 SECONDS_PER_MINUTE = 60
 
-DEFAULT_N_OF_SAMPLE = 3000
+DEFAULT_N_OF_SAMPLE = 400
 DEFAULT_FOLDER_OF_PICTURES = './TimedPictures'
-DEFAULT_TIME_BETWEEN_PICS_S = 0.01
+DEFAULT_TIME_BETWEEN_PICS_S = 0.2
 
 MACH3_ANGLES_FILE = './TimedAngles/angle.txt'
 random.seed()
@@ -67,6 +68,10 @@ def getTimedPictures(n_of_samples=DEFAULT_N_OF_SAMPLE,
     # Prepares Camera. It's possible to change here for a specific camera instead of using a generic CameraHandler.
     ch = CameraHandler(startup_cam=True)
 
+    mc = Mach3Communication(fromMach3File=r"C:\Windows\Temp\fromMach3.txt",
+                            toMach3File=r"C:\Windows\Temp\toMach3.txt")
+    mc.clearFromMach3()
+
     # region Prepares Mach3 simulation
     fMach3 = None
     if IS_SIMULATING_MACH3:
@@ -95,7 +100,14 @@ def getTimedPictures(n_of_samples=DEFAULT_N_OF_SAMPLE,
     listPic = []
     listTime = []
     lastSimulatedAngle = 0
-    for idx in range(n_of_samples):
+
+    print("Waiting for mach3...")
+    mc.waitForString(str="go")
+    print("Got GO signal, starting loop...")
+    count = 0
+
+    while (not mc.hasString(str='done')) and (count < n_of_samples):
+        count += 1
 
         if IS_SIMULATING_MACH3:
             for i in range(int(random.random()*4)):

@@ -17,16 +17,17 @@ comm.runGCodeSafely(gc)
 """
 
 import time
-from proj2.GCodeGenerator.GCodeGenerator import *
+from GCodeGenerator.GCodeGenerator import *
 import os
 
-COMMUNICATION_TIMEOUT = 10  # Seconds
+COMMUNICATION_TIMEOUT = 15  # Seconds
 TIME_TO_WAIT_BEFORE_LINES = 0.3  # Seconds
 
 
 class Mach3Communication(object):
 
-    def __init__(self, fromMach3File: str = 'fromMach3.txt', toMach3File: str = 'toMach3.txt'):
+    def __init__(self, fromMach3File: str = 'fromMach3.txt', toMach3File: str = 'toMach3.txt',
+                 print_comms=False):
         """
         Responsible for managing the communication with Mach 3 in order to send G codes and wait for its execution.
         :param fromMach3File: file with Mach3 response.
@@ -37,8 +38,47 @@ class Mach3Communication(object):
         self.fromMach3File = fromMach3File
         self.toMach3File = toMach3File
 
+        self.print_comms = print_comms
+
         # Cleans file to Mach3 just in case there is garbage in the folder
         self.clearOK()
+
+    def hasString(self, str="ok"):
+        with open(self.fromMach3File, 'r') as fFromMach3:
+            text = fFromMach3.readline()
+            if self.print_comms:
+                print('Read from Mach3: ' + text)
+
+        if text == str+'\n':
+            return True
+        else:
+            return False
+
+    def waitForString(self, str="ok"):
+        """
+        Waits for Mach3 response till it turns 'string'. Timeout defined in COMMUNICATION_TIMEOUT constant, if not
+        respected a TimeoutError exception will be raised.
+        """
+
+        receivedOk = False
+
+        t0 = time.time()
+        while not receivedOk:
+
+            with open(self.fromMach3File, 'r') as fFromMach3:
+                text = fFromMach3.readline()
+                if self.print_comms:
+                    print('Read from Mach3: ' + text)
+                time.sleep(TIME_TO_WAIT_BEFORE_LINES)
+
+            if text == str+'\n':
+                receivedOk = True
+
+            if (time.time() - t0) > COMMUNICATION_TIMEOUT:
+
+                # TODO: ADD LOGIC TO PROTECT CNC FROM MACH3. I.E. TURN MOTORS OFF ELECTRICALLY?
+
+                raise(TimeoutError("Communication with Mach3 is taking too long."))
 
     def waitForOK(self):
         """
@@ -53,7 +93,8 @@ class Mach3Communication(object):
 
             with open(self.fromMach3File, 'r') as fFromMach3:
                 text = fFromMach3.readline()
-                print('Read from Mach3: ' + text)
+                if self.print_comms:
+                    print('Read from Mach3: ' + text)
                 time.sleep(TIME_TO_WAIT_BEFORE_LINES)
 
             if text == 'ok\n':

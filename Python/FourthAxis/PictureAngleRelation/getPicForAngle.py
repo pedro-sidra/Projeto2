@@ -7,7 +7,7 @@ from FourthAxis.PictureAngleRelation.getTimedAngles import *
 import cv2
 
 OUTPUT_FOLDER = './OutputForAlgo/'
-TIMED_ANGLES_FILE = './TimedAngles/angle.txt'
+TIMED_ANGLES_FILE = r'C:\Windows\Temp\angle.txt'
 
 def getPicsForAngles():
 
