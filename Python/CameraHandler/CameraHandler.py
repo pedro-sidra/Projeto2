@@ -27,8 +27,12 @@ class CameraHandler(object):
 
     def _initVideoCapture(self):
         if self.videoCapture is None:
+            ret = False
             self.videoCapture = cv2.VideoCapture(self.device)
-            # Check success in openning device
+            while not ret:
+                self.videoCapture.release()
+                self.videoCapture = cv2.VideoCapture(self.device)
+                ret, _ = self.videoCapture.read()
             if not self.videoCapture.isOpened():
                 raise IOError("Couldn't open video device.")
 
@@ -55,23 +59,21 @@ class CameraHandler(object):
 
 
 class CameraHandlerFromFile(CameraHandler):
-    def __init__(self, file, device=0):
+    def __init__(self, file, device=0, resize=None):
         """Defines a specific camera from a .npz file containing camera coefs."""
 
         super().__init__(device=device, startup_cam=True)
-        print("HAAAA")
 
         contents = np.load(file)
         self.cameraMatrix = contents['mtx']
         self.distCoeff = contents['dist']
 
         self.device = device
+        self.resize = resize
 
         img = self.takePicture()
-
-        self.setResolution((1280, 960))
-
-        img = self.takePicture()
+        if self.resize:
+            img = cv2.resize(img, self.resize)
         h,  w = img.shape[:2]
         self.optCameraMtx, self.roi = cv2.getOptimalNewCameraMatrix(
             self.cameraMatrix, self.distCoeff,
@@ -82,6 +84,9 @@ class CameraHandlerFromFile(CameraHandler):
 
     def read(self):
         image = self.takePicture()
+
+        if self.resize:
+            image = cv2.resize(image, self.resize)
 
         ret = cv2.undistort(image,
                            self.cameraMatrix,

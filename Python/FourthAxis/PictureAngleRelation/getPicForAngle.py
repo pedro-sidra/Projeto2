@@ -4,6 +4,8 @@ and angles using timestamp."""
 from FourthAxis.PictureAngleRelation.getTimedPictures import *
 from FourthAxis.PictureAngleRelation.getTimedAngles import *
 
+import cv2
+
 OUTPUT_FOLDER = './OutputForAlgo/'
 
 

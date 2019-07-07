@@ -6,7 +6,7 @@ def getTimedAngles() -> tuple:
     listAngle = []
     listTime = []
 
-    with open('./TimedAngles/angle.txt', encoding='UTF-8', errors='ignore') as f:
+    with open(r"C:\Users\Freitas\Desktop\VBS\angle.txt", encoding='UTF-8', errors='ignore') as f:
 
         data = f.readlines()
         print('getTimedAngles:' + str(data))

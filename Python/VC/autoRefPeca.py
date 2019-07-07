@@ -21,32 +21,39 @@ import time
 # e entao escreve outro codigo G para voltar pra posicao inicial
 
 # This is a huge number
+
+FROM_MACH3 = r'C:\Windows\Temp\fromMach3.txt'
+TO_MACH3 = r'C:\Windows\Temp\toMach3.txt'
+
+HEIGHT, WIDTH = 960, 1280
+
+open(FROM_MACH3, 'w').close()
 HUGENUMBER = 10000000
 
 def waitForOK():
     receivedOk = False
     while not receivedOk:
-        with open('fromMach3.txt', 'r') as fFromMach3:
+        with open(FROM_MACH3, 'r') as fFromMach3:
             text = fFromMach3.readline()
             print('text ' + text)
             time.sleep(0.3)
         if text == 'ok\n':
             receivedOk = True
-            open('fromMach3.txt', 'w').close()
+            open(FROM_MACH3, 'w').close()
 
 
 def sendOK():
-    with open('toMach3.txt', 'w') as fToMach3:
+    with open(TO_MACH3, 'w') as fToMach3:
         fToMach3.write('ok')
 
 
 def sendDone():
-    with open('toMach3.txt', 'w') as fToMach3:
+    with open(TO_MACH3, 'w') as fToMach3:
         fToMach3.write('exit')
 
 
 def clearOK():
-    open('toMach3.txt', 'w').close()
+    open(TO_MACH3, 'w').close()
 
 
 def waitForMach3():
@@ -56,17 +63,18 @@ def waitForMach3():
 
 
 # Comunicacao feita com arquivos de texto (aham...)
-def takePicturesWithMachine(picturePositions, desiredFeedRate=500, device = 1):
+def takePicturesWithMachine(picturePositions, desiredFeedRate=500, device = 0):
     # gerador de codigo G (clauser <3)
-    gc = GCodeGenerator(5)
-    cap = CameraHandlerFromFile("/home/estudos/code/Projeto2/Python/CameraHandler/camera_params.npz",
+    gc = GCodeGenerator(5, output_file=r"C:\Windows\Temp\out.tap")
+    cap = CameraHandlerFromFile("../CameraHandler/camera_params.npz",
+                                resize=(WIDTH,HEIGHT),
                                device=device)
 
     # initialize empty vector for the pictures
     picturesTaken = []
 
     # Clean up the communications
-    open('fromMach3.txt', 'w').close()
+    open(FROM_MACH3, 'w').close()
     clearOK()
 
     # For each picture position...
@@ -153,12 +161,12 @@ def zero_xy():
   
     # Calibrated points on the extremities of the reference tags
     PIECE_POINTS =[
-        np.array((55.343,2.333)),
-        np.array((407.70,1.29))
+        np.array((37.740,12.29)),
+        np.array((409.43,12.67))
     ]
 
-    refWidthReal = 51
-    refHeightReal = 38
+    refWidthReal = 50
+    refHeightReal = 39
 
     if args['takebgpics']:
         bgpics = takePicturesWithMachine(PICTURE_POINTS, device=args["device"])
@@ -252,14 +260,16 @@ def desce_servo(ser):
 if __name__ == "__main__":
     DIST_APALPADOR = 80
     OFFS_APALPADOR = 20
-    
-    ser = serial.Serial('COM4')
-    time.sleep(3)
-    sobe_servo(ser)
+    open(TO_MACH3, 'w').close()
+    open(FROM_MACH3, 'w').close()
+
+    #ser = serial.Serial('COM4')
+    #time.sleep(3)
+    #sobe_servo(ser)
     Xref, Yref, pieceAngle = zero_xy()
 
     # Set Coordinate System:
-    gc = GCodeGenerator(5)
+    gc = GCodeGenerator(5, output_file=r"C:\Windows\Temp\out.tap")
     gc.cleanFile()
     gc.getInitialCode()
     gc.moveLinear(Point(Xref, Yref, 0))
@@ -276,12 +286,12 @@ if __name__ == "__main__":
     if Xref is None or Yref is None or pieceAngle is None:
         raise Exception("No piece found")
 
-    desce_servo(ser)
+    #desce_servo(ser)
 
     sendDone()
 
     waitForOK()
-    sobe_servo(ser)
-    ser.write(b'k')
-    open('toMach3.txt', 'w').close()
-    open('fromMach3.txt', 'w').close()
+    #sobe_servo(ser)
+    #ser.write(b'k')
+    open(TO_MACH3, 'w').close()
+    open(FROM_MACH3, 'w').close()

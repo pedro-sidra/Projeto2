@@ -2,19 +2,19 @@
 relation between the time and the respective picture in order to prepare a sequence of pictures."""
 
 import os, shutil
-from FourthAxis.CameraHandler import *
+from CameraHandler.CameraHandler import *
 import time
 
 # region Defined Constants
 
-IS_SIMULATING_MACH3 = True
+IS_SIMULATING_MACH3 = False
 SIMULATION_SLEEP = 0.050
 SECONDS_PER_HOUR = 3600
 SECONDS_PER_MINUTE = 60
 
-DEFAULT_N_OF_SAMPLE = 100
+DEFAULT_N_OF_SAMPLE = 3000
 DEFAULT_FOLDER_OF_PICTURES = './TimedPictures'
-DEFAULT_TIME_BETWEEN_PICS_S = 0.1
+DEFAULT_TIME_BETWEEN_PICS_S = 0.01
 
 # endregion
 
@@ -60,7 +60,7 @@ def getTimedPictures(n_of_samples=DEFAULT_N_OF_SAMPLE,
                      folder_of_pic=None) -> tuple:
 
     # Prepares Camera. It's possible to change here for a specific camera instead of using a generic CameraHandler.
-    ch = CameraHandler()
+    ch = CameraHandler(startup_cam=True)
 
     # region Prepares Mach3 simulation
     fMach3 = None
