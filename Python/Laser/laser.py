@@ -148,6 +148,19 @@ def meanFilter(vec, w=2):
         v[i] = m
     return v
 
+#Opens a windows that allows the user to select a rectangular ROI
+def selectRoi(im):
+    r = cv2.selectROI(im,showCrosshair=False)    
+    return r
+
+#Filters out everyting out of the specified ROI
+def applyRoi(im,r):
+    blank = np.zeros(shape=im.shape, dtype=np.uint8) 
+    imCrop = im[int(r[1]):int(r[1]+r[3]), int(r[0]):int(r[0]+r[2])]
+    blank[int(r[1]):int(r[1]+r[3]), int(r[0]):int(r[0]+r[2])]=imCrop
+    return blank
+
+
 if __name__=="__main__":
     args = parseArgs()
 
