@@ -4,8 +4,7 @@ import cv2
 
 
 class CameraHandler(object):
-
-    def __init__(self):
+    def __init__(self, device=0, startup_cam=False):
         """Instantiates a generic camera with no predefined data regarding camera matrix or distortion coefficients."""
 
         # Calibration data
@@ -13,8 +12,11 @@ class CameraHandler(object):
         self.distCoeff = None
 
         # Camera information
-        self.device = 0
+        self.device = device
         self.videoCapture = None
+
+        if startup_cam:
+            self._initVideoCapture()
 
     def getCalibrationData(self) -> list:
         """Returns the calibration data of the camera: [cameraMatrix, distCoeff]
@@ -23,16 +25,19 @@ class CameraHandler(object):
 
         return [self.cameraMatrix, self.distCoeff]
 
-    def takePicture(self):
-        """Takes a picture and returns its image."""
-
+    def _initVideoCapture(self):
         if self.videoCapture is None:
+            ret = False
             self.videoCapture = cv2.VideoCapture(self.device)
-
-            # Check success in openning device
+            while not ret:
+                self.videoCapture.release()
+                self.videoCapture = cv2.VideoCapture(self.device)
+                ret, _ = self.videoCapture.read()
             if not self.videoCapture.isOpened():
                 raise IOError("Couldn't open video device.")
 
+    def takePicture(self):
+        """Takes a picture and returns its image."""
         # Captures picture
         success, image = self.videoCapture.read()
 
@@ -54,23 +59,21 @@ class CameraHandler(object):
 
 
 class CameraHandlerFromFile(CameraHandler):
-    def __init__(self, file, device=0):
+    def __init__(self, file, device=0, resize=None):
         """Defines a specific camera from a .npz file containing camera coefs."""
 
-        super().__init__()
+        super().__init__(device=device, startup_cam=True)
 
         contents = np.load(file)
         self.cameraMatrix = contents['mtx']
         self.distCoeff = contents['dist']
 
         self.device = device
+        self.resize = resize
 
         img = self.takePicture()
-
-        self.setResolution((1280, 960))
-
-        img = self.takePicture()
-
+        if self.resize:
+            img = cv2.resize(img, self.resize)
         h,  w = img.shape[:2]
         self.optCameraMtx, self.roi = cv2.getOptimalNewCameraMatrix(
             self.cameraMatrix, self.distCoeff,
@@ -82,15 +85,18 @@ class CameraHandlerFromFile(CameraHandler):
     def read(self):
         image = self.takePicture()
 
+        if self.resize:
+            image = cv2.resize(image, self.resize)
+
         ret = cv2.undistort(image,
                            self.cameraMatrix,
                            self.distCoeff, None,
                            self.optCameraMtx,
                            )
-        # crop the image
+
         x, y, w, h = self.roi
         ret = ret[y:y+h, x:x+w]
-        return ret
+        return True, ret
 
 
 class NotebookCamera(CameraHandler):

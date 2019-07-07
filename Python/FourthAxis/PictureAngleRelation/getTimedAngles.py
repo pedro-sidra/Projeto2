@@ -8,10 +8,8 @@ def getTimedAngles(timed_angles_file='./TimedAngles/angle.txt') -> tuple:
     listTime = []
 
     with open(timed_angles_file, encoding='UTF-8', errors='ignore') as f:
-
         data = f.readlines()
         # print('getTimedAngles:' + str(data))
-
         # region Separate angle and time from each line of the read file
         for line in data:
 

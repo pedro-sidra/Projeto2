@@ -1,25 +1,33 @@
 import cv2
+import os
+import matplotlib.pyplot as plt
 import argparse
 import json
 import numpy as np
 
-from SLCalculator import SLCalculator
+from PieceScanner import PieceScanner
 
 REF_PHOTO = "/home/estudos/Pictures/Projeto2/TesteLaser/ref.jpg"
 PIECE_PHOTO = "/home/estudos/Pictures/Projeto2/TesteLaser/inclinadoBorr.jpg"
-PARAMS = "params.json"
 
-PIXELS_PER_CM = 32  # GAMBI
+# medida de um objeto na vida real e em uma imagem
+PIXELS_PER_CM = 29
 
+# tangente do angulo do laser com a superficie de ref.
+TAN_LASER_ANGLE = 26.2/23
+
+
+PLOT_EACH = False
 
 def parseArgs():
     # Parse arguments
-    ap = argparse.ArgumentParser(description="Shows the results for one image")
+    ap = argparse.ArgumentParser(description="Shows the results for images")
     ap.add_argument("reference", help="filepath of the ref. picture to use",
                     )
-    ap.add_argument("piece", help="filepath of the picture to run calculations on",
+    ap.add_argument("pieces", nargs='+',
+                    help="filepath of the pictures to run calculations on",
                     )
-    ap.add_argument("--ppcm", type=int, help="Pixels per cm on the pictures",
+    ap.add_argument("--ppcm", type=float, help="Pixels per cm on the pictures",
                     default=PIXELS_PER_CM)
     return ap.parse_args()
 
@@ -142,9 +150,9 @@ def get_mask_lab(im, calib=True):
 
 def meanFilter(vec, w=2):
     v = vec
-    for i in range(w,v.shape[0]-w):
+    for i in range(w, v.shape[0]-w):
         block = v[i-w:i+w+1]
-        m = np.mean(block,dtype=np.float32)
+        m = np.mean(block, dtype=np.float32)
         v[i] = m
     return v
 
@@ -161,41 +169,54 @@ def applyRoi(im,r):
     return blank
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     args = parseArgs()
 
     ref_im = cv2.imread(args.reference)
-    mask = get_mask(ref_im, calib=False)
-    SL = SLCalculator(refMask=mask, ppcm=PIXELS_PER_CM,
-                      tanLaserAngle=17.9/36)
-    SL.draw_refLine(ref_im)
 
-    k = 0
+    scanner = PieceScanner(ppcm=PIXELS_PER_CM,
+                           tanLaserAngle=TAN_LASER_ANGLE,
+                           axisCenter=(346, 7.5))
+    scanner.init_reference(ref_im)
+    scanner.show_reference()
 
-    cv2.imshow("Rolou?", ref_im)
-    cv2.waitKey(-1)
+    for piece in args.pieces:
+        piece_im = cv2.imread(piece)
 
-    piece_im = cv2.imread(args.piece)
-    piece_mask = get_mask(piece_im, calib=False)
-    contours, _ = cv2.findContours(piece_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    cv2.drawContours(piece_im, contours, -1, (0, 0, 0), 6)
+        angle = os.path.splitext(piece)[0].split("pic")[-1]
+        angle = np.pi*float(angle)/180
+        x, heights = scanner.add_view(piece_im, angle)
 
-    cv2.imshow("Rolou?", piece_im)
-    cv2.waitKey(-1)
+        if PLOT_EACH:
+            fig, axs = plt.subplots(1, 2)
+            axs[0].imshow(piece_im)
+            axs[0].set_title(angle)
+            axs[1].plot(x, heights, 'b+')
+            plt.show()
 
-    x, heights = SL.calc_heights(piece_mask, filter=False)
-
-    ypic, xpic = np.nonzero(piece_mask)
-    for xim, yim, height in zip(xpic, ypic, heights):
-        piece_im[yim,xim] = (0,0,abs(int(255*height/max(heights))))
-        # return 17.9/36*ds/self.ppcm
-
-    import matplotlib.pyplot as plt
-
-    cv2.imshow("Rolou?", piece_im)
-    cv2.waitKey(-1)
-
-
-    plt.plot(x,heights, 'bo')
+    points = scanner.get_piece()
+    plt.figure()
+    plt.plot(*points, 'go')
     plt.show()
-    print(x.shape)
+
+    angles = (np.arctan2(points[0, :], points[1, :]))
+
+    samples = 720
+    dtheta = 2*np.pi/samples
+
+    xp, yp = points
+    points_filter = np.empty(points.shape)
+
+    for i, a in enumerate(np.linspace(-np.pi, np.pi, samples)):
+
+        in_range = np.bitwise_and(angles>= a, angles < a+dtheta)
+        size = in_range.nonzero()[0].size
+
+        xf = xp[in_range].sum()/size
+        yf = yp[in_range].sum()/size
+        points_filter[:,i] = np.array([xf,yf])
+
+    plt.figure()
+    plt.plot(*points_filter, 'go')
+    plt.show()
+
