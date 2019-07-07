@@ -7,15 +7,20 @@ from FourthAxis.PictureAngleRelation.getTimedAngles import *
 import cv2
 
 OUTPUT_FOLDER = './OutputForAlgo/'
-
+TIMED_ANGLES_FILE = './TimedAngles/angle.txt'
 
 def getPicsForAngles():
 
     # Get pictures and angles with timestamp
+
+    print('Taking pictures...')
     tsPic, images = getTimedPictures()
-    tsAng, angles = getTimedAngles()
+    print(f'Loading angle file from {TIMED_ANGLES_FILE}...')
+    tsAng, angles = getTimedAngles(timed_angles_file=TIMED_ANGLES_FILE)
 
     # region Check for errors
+    print('Checking for errors in pictures and angles files...')
+
     if len(tsPic) != len(images):
         raise IOError('Length of tsPic is different than length of images.')
     if len(tsAng) != len(angles):
@@ -23,6 +28,7 @@ def getPicsForAngles():
     # endregion
 
     # region Matches picture samples and angles
+    print('Matching pictures and angles...')
     listMatch = []
     for iAngle, _ in enumerate(tsAng):
 
@@ -42,6 +48,7 @@ def getPicsForAngles():
     # Source of this part of the code:
     # https://stackoverflow.com/questions/185936/how-to-delete-the-contents-of-a-folder-in-python
 
+    print('Cleaning output folder...')
     for the_file in os.listdir(OUTPUT_FOLDER):
         file_path = os.path.join(OUTPUT_FOLDER, the_file)
         try:
@@ -54,6 +61,7 @@ def getPicsForAngles():
     # endregion
 
     # region Stores Output Files
+    print('Saving output pictures...')
     with open(f'{OUTPUT_FOLDER}outputRelation.txt', mode='w', encoding='UTF-8', errors='ignore') as fOut:
         fOut.write('iAngle\tiPic\tts Ang\t\t\tAngle\tts Pic\n')
         for match in listMatch:
@@ -63,6 +71,7 @@ def getPicsForAngles():
             fOut.write(outLine)
 
             cv2.imwrite(f'{OUTPUT_FOLDER}pic{angles[match["iAngle"]]}.png', images[match['iPic']])
+    print(f'\nDONE! Matching pictures saved in {OUTPUT_FOLDER}outputRelation.txt.')
     # endregion
 
 getPicsForAngles()

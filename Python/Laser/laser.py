@@ -32,8 +32,120 @@ def parseArgs():
     return ap.parse_args()
 
 
+def morphCloseThenOpen(mask):
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    return mask
+
+
+with open(PARAMS, 'r') as f:
+    params_init = json.loads(f.read())
+
+with open("paramsLAB.json", 'r') as f:
+    paramsLAB_init = json.loads(f.read())
+
+params = {
+    "highH": 180,
+    "lowH": 180,
+    "lowS": 255,
+    "highS": 255,
+    "lowV": 255,
+    "highV": 255,
+}
+
+paramsLAB = {
+    "lowL": 255,
+    "highL": 255,
+    "lowA": 255,
+    "highA": 255,
+    "lowB": 255,
+    "highB": 255,
+        }
+
 def nothing(x):
     pass
+
+
+def get_mask(im, calib=True):
+    im_HSV = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
+
+    if not calib:
+        LASER_LOWER = np.array(
+            [params_init['lowH'], params_init['lowS'], params_init['lowV']])
+        LASER_UPPER = np.array(
+            [params_init['highH'], params_init['highS'], params_init['highV']])
+        mask = cv2.inRange(im_HSV, LASER_LOWER, LASER_UPPER)
+        mask = morphCloseThenOpen(mask)
+        return mask
+
+    cv2.namedWindow("Calibrate Mask")
+    for paramName, value in params.items():
+        cv2.createTrackbar(paramName, 'Calibrate Mask',
+                           params_init[paramName], value, nothing)
+
+    cv2.namedWindow("Pic", cv2.WINDOW_NORMAL)
+    k = ''
+    while k != ord('q'):
+        k = cv2.waitKey(5)
+
+        for key, value in params.items():
+            params[key] = cv2.getTrackbarPos(key, 'Calibrate Mask')
+
+        LASER_LOWER = np.array(
+            [params['lowH'], params['lowS'], params['lowV']])
+        LASER_UPPER = np.array(
+            [params['highH'], params['highS'], params['highV']])
+
+        mask = cv2.inRange(im_HSV, LASER_LOWER, LASER_UPPER)
+        mask = morphCloseThenOpen(mask)
+
+        cv2.imshow("Pic", im)
+        cv2.imshow("Calibrate Mask", mask)
+
+    with open(PARAMS, 'w')as f:
+        f.write(json.dumps(params))
+    return mask
+
+def get_mask_lab(im, calib=True):
+    im_LAB = cv2.cvtColor(im, cv2.COLOR_BGR2LAB)
+
+    if not calib:
+        LASER_LOWER = np.array(
+            [paramsLAB_init['lowL'], paramsLAB_init['lowA'], paramsLAB_init['lowB']])
+        LASER_UPPER = np.array(
+            [paramsLAB_init['highL'], paramsLAB_init['highA'], paramsLAB_init['highB']])
+        mask = cv2.inRange(im_LAB, LASER_LOWER, LASER_UPPER)
+        mask = morphCloseThenOpen(mask)
+        return mask
+
+    cv2.namedWindow("Calibrate Mask")
+    for paramName, value in paramsLAB.items():
+        cv2.createTrackbar(paramName, 'Calibrate Mask',
+                           paramsLAB_init[paramName], value, nothing)
+
+    cv2.namedWindow("Pic", cv2.WINDOW_NORMAL)
+    k = ''
+    while k != ord('q'):
+        k = cv2.waitKey(5)
+
+        for key, value in paramsLAB.items():
+            paramsLAB[key] = cv2.getTrackbarPos(key, 'Calibrate Mask')
+
+        LASER_LOWER = np.array(
+            [paramsLAB['lowL'], paramsLAB['lowA'], paramsLAB['lowB']])
+        LASER_UPPER = np.array(
+            [paramsLAB['highL'], paramsLAB['highA'], paramsLAB['highB']])
+
+        mask = cv2.inRange(im_LAB, LASER_LOWER, LASER_UPPER)
+        mask = morphCloseThenOpen(mask)
+
+        cv2.imshow("Pic", im)
+        cv2.imshow("Calibrate Mask", mask)
+
+    with open("paramsLAB.json", 'w')as f:
+        f.write(json.dumps(paramsLAB))
+    return mask
 
 
 def meanFilter(vec, w=2):
