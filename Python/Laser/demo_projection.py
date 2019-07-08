@@ -6,6 +6,7 @@ import numpy as np
 from SLCalculator import SLCalculator
 
 PARAMS = "params.json"
+TAN_LASER_ANGLE = 26.2/23
 
 
 def morphCloseThenOpen(mask):
@@ -92,7 +93,7 @@ if __name__=="__main__":
 
     im = cv2.imread(args.picture)
     mask = get_mask(im, calib=True)
-    SL = SLCalculator(refMask=mask, ppcm = args.ppcm)
+    SL = SLCalculator(refMask=mask, ppcm = args.ppcm, tanLaserAngle=TAN_LASER_ANGLE)
 
     if args.show_picture:
         im = cv2.imread(args.show_picture)

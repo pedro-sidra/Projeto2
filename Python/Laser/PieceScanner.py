@@ -13,6 +13,8 @@ PARAMS = "params.json"
 
 REF_UPPER = np.array([88, 11, 255])
 REF_LOWER = np.array([33, 0, 253])
+# REF_UPPER = np.array([89, 9, 255])
+# REF_LOWER = np.array([37, 0, 207])
 
 
 def nothing(x):
@@ -52,8 +54,9 @@ def get_mask(im, calib=True):
         return mask
 
     cv2.namedWindow("Calibrate Mask")
+    cv2.namedWindow("Trackbar")
     for paramName, value in params.items():
-        cv2.createTrackbar(paramName, 'Calibrate Mask',
+        cv2.createTrackbar(paramName, 'Trackbar',
                            params_init[paramName], value, nothing)
 
     cv2.namedWindow("Pic", cv2.WINDOW_NORMAL)
@@ -62,7 +65,7 @@ def get_mask(im, calib=True):
         k = cv2.waitKey(5)
 
         for key, value in params.items():
-            params[key] = cv2.getTrackbarPos(key, 'Calibrate Mask')
+            params[key] = cv2.getTrackbarPos(key, 'Trackbar')
 
         LASER_LOWER = np.array(
             [params['lowH'], params['lowS'], params['lowV']])
@@ -81,10 +84,11 @@ def get_mask(im, calib=True):
 
 
 class PieceScanner():
-    def __init__(self, ppcm, tanLaserAngle, axisCenter=(0, 0)):
+    def __init__(self, ppcm, tanLaserAngle, axisCenter=(0, 0), CM=None):
         self.ppcm = ppcm
         self.axisCenter = axisCenter
         self.tanLaserAngle = tanLaserAngle
+        self.CM = CM
 
         self.views = []
         self.view_points = []
@@ -102,7 +106,8 @@ class PieceScanner():
 
         self.SL = SLCalculator(refMask=mask, ppcm=self.ppcm,
                                tanLaserAngle=self.tanLaserAngle,
-                               axisCenter=self.axisCenter)
+                               axisCenter=self.axisCenter,
+                               CM=self.CM)
         self.SL.draw_refLine(self.ref_im)
 
     def get_piece(self):
@@ -122,12 +127,13 @@ class PieceScanner():
             R = np.array([[c, -s], [s, c]])
 
             points_rot = R@points
+            # points_rot = points
 
             piece = np.concatenate((piece, points_rot), axis=-1)
 
         return piece
 
-    def add_view(self, view_img, view_angle):
+    def add_view(self, view_img, view_angle, return_mask=False):
 
         view_mask = get_mask(view_img, calib=False)
 
@@ -138,17 +144,21 @@ class PieceScanner():
         # view_mask[locations] = mask_partial
 
         gambi = np.zeros(view_mask.shape)
-        gambi[230:, 213:468] = 1
+        gambi[2*230:, 2*213:2*468] = 1
+        # gambi = np.ones(view_mask.shape)
         view_mask = view_mask * gambi
 
         x, heights = self.SL.calc_heights(view_mask,
-                                          filter=True)
+                                          filter=False)
 
-        points = np.bitwise_and(x>-5, x<5)
-        x = x[points]
-        heights = heights[points]
+        # points = np.bitwise_and(x>-5, x<5)
+        # x = x[points]
+        # heights = heights[points]
         self.views.append(view_img)
         self.view_points.append((x, heights))
         self.angles.append(view_angle)
 
-        return x, heights
+        if return_mask:
+            return x, heights, view_mask
+        else:
+            return x, heights

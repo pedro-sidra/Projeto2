@@ -100,7 +100,7 @@ if __name__=="__main__":
     args = parseArgs()
 
     ref_im = cv2.imread(args.reference)
-    mask = get_mask(ref_im, calib=False)
+    mask = get_mask(ref_im, calib=True)
     SL = SLCalculator(refMask=mask, ppcm=PIXELS_PER_CM,
                       tanLaserAngle=17.9/36)
     SL.draw_refLine(ref_im)
@@ -111,7 +111,7 @@ if __name__=="__main__":
     cv2.waitKey(-1)
 
     piece_im = cv2.imread(args.piece)
-    piece_mask = get_mask(piece_im, calib=False)
+    piece_mask = get_mask(piece_im, calib=True)
     contours, _ = cv2.findContours(piece_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(piece_im, contours, -1, (0, 0, 0), 6)
 
