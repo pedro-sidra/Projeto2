@@ -1,0 +1,11 @@
+'esse código é executado quando é chamado o código M6. Ao finalizar,
+'o spindle irá parar e a máquina travará até ser pressionado o botão cycle start,
+'possibilitando a troca manual da ferramenta
+
+tool = GetSelectedTool()
+SetCurrentTool( tool )
+  
+'Posição em que ocorrerá a troca da ferramenta
+Code "G0 X0 Y0 Z0" 
+MsgBox "Manually switch the tool and then press the cycle start button"
+
