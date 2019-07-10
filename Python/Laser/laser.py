@@ -6,6 +6,7 @@ import json
 import numpy as np
 
 from Laser.PieceScanner import PieceScanner
+from Laser.ImageLoader import ImageLoader
 
 REF_PHOTO = "/home/estudos/Pictures/Projeto2/TesteLaser/ref.jpg"
 PIECE_PHOTO = "/home/estudos/Pictures/Projeto2/TesteLaser/inclinadoBorr.jpg"
@@ -20,6 +21,7 @@ PIXELS_PER_CM = 2*29
 # Se quando H aumenta, y diminui -> TAN_LASER_ANGLE positivo
 TAN_LASER_ANGLE = -26.2/23
 
+PARAMS = 'params.json'
 
 
 def parseArgs():
@@ -65,7 +67,8 @@ paramsLAB = {
     "highA": 255,
     "lowB": 255,
     "highB": 255,
-        }
+}
+
 
 def nothing(x):
     pass
@@ -111,46 +114,6 @@ def get_mask(im, calib=True):
         f.write(json.dumps(params))
     return mask
 
-def get_mask_lab(im, calib=True):
-    im_LAB = cv2.cvtColor(im, cv2.COLOR_BGR2LAB)
-
-    if not calib:
-        LASER_LOWER = np.array(
-            [paramsLAB_init['lowL'], paramsLAB_init['lowA'], paramsLAB_init['lowB']])
-        LASER_UPPER = np.array(
-            [paramsLAB_init['highL'], paramsLAB_init['highA'], paramsLAB_init['highB']])
-        mask = cv2.inRange(im_LAB, LASER_LOWER, LASER_UPPER)
-        mask = morphCloseThenOpen(mask)
-        return mask
-
-    cv2.namedWindow("Calibrate Mask")
-    for paramName, value in paramsLAB.items():
-        cv2.createTrackbar(paramName, 'Calibrate Mask',
-                           paramsLAB_init[paramName], value, nothing)
-
-    cv2.namedWindow("Pic", cv2.WINDOW_NORMAL)
-    k = ''
-    while k != ord('q'):
-        k = cv2.waitKey(5)
-
-        for key, value in paramsLAB.items():
-            paramsLAB[key] = cv2.getTrackbarPos(key, 'Calibrate Mask')
-
-        LASER_LOWER = np.array(
-            [paramsLAB['lowL'], paramsLAB['lowA'], paramsLAB['lowB']])
-        LASER_UPPER = np.array(
-            [paramsLAB['highL'], paramsLAB['highA'], paramsLAB['highB']])
-
-        mask = cv2.inRange(im_LAB, LASER_LOWER, LASER_UPPER)
-        mask = morphCloseThenOpen(mask)
-
-        cv2.imshow("Pic", im)
-        cv2.imshow("Calibrate Mask", mask)
-
-    with open("paramsLAB.json", 'w')as f:
-        f.write(json.dumps(paramsLAB))
-    return mask
-
 
 def meanFilter(vec, w=2):
     v = vec
@@ -160,62 +123,38 @@ def meanFilter(vec, w=2):
         v[i] = m
     return v
 
-#Opens a windows that allows the user to select a rectangular ROI
-def selectRoi(im):
-    r = cv2.selectROI(im,showCrosshair=False)    
-    return r
-
-#Filters out everyting out of the specified ROI
-def applyRoi(im,r):
-    blank = np.zeros(shape=im.shape, dtype=np.uint8) 
-    imCrop = im[int(r[1]):int(r[1]+r[3]), int(r[0]):int(r[0]+r[2])]
-    blank[int(r[1]):int(r[1]+r[3]), int(r[0]):int(r[0]+r[2])]=imCrop
-    return blank
-
 
 if __name__ == "__main__":
     args = parseArgs()
+    loader = ImageLoader("../CameraHandler/camera_params.npz",
+                        resize=(1280,960))
 
-    contents = np.load("../CameraHandler/camera_params.npz")
-    cameraMatrix = contents['mtx']
-    distCoeff = contents['dist']
-
-    w,  h = (1280, 960)
-    optCameraMtx, roi = cv2.getOptimalNewCameraMatrix(
-        cameraMatrix, distCoeff,
-        (w, h), 0, (w, h))
-
-    mapx, mapy = cv2.initUndistortRectifyMap(cameraMatrix, distCoeff,
-                                            None, optCameraMtx, (w,h),
-                                            5)
-
-    def get_img(path):
-        dst = cv2.imread(path)
-        dst = cv2.resize(dst,(1280,960))
-        dst = cv2.remap(dst, mapx, mapy, cv2.INTER_LINEAR)
-        x, y, w, h = roi
-        dst = dst[y:y+h, x:x+w]
-        return dst
-
-    ref_im = get_img(args.reference)
+    ref_im = loader.get_img(args.reference)
 
     scanner = PieceScanner(ppcm=PIXELS_PER_CM,
                            tanLaserAngle=TAN_LASER_ANGLE,
-                           axisCenter=(2*346, 75),
-                           CM=optCameraMtx)
+                           axisCenter=([702, 790], 48.97),
+                           ref_height=405.64,
+                           # teste: axisCenter=(2*346, 75),
+                           CM=loader.get_mtx())
+
     scanner.init_reference(ref_im)
     scanner.show_reference()
 
+    im0 = loader.get_img(args.pieces[0])
+    scanner.get_roi(im0)
+
     for piece in args.pieces:
-        piece_im = get_img(piece)
+        piece_im = loader.get_img(piece)
 
         angle = os.path.splitext(piece)[0].split("pic")[-1]
         angle = np.pi*float(angle)/180
+
         x, heights, mask = scanner.add_view(piece_im, angle, return_mask=True)
 
         if args.plot_each:
             fig, axs = plt.subplots(1, 2)
-            piece_im[mask!=0] = (0,0,0)
+            piece_im[mask != 0] = (0, 0, 0)
             axs[0].imshow(piece_im)
             axs[0].set_title(angle)
             axs[1].plot(x, heights, 'b+')
@@ -246,4 +185,6 @@ if __name__ == "__main__":
 
     plt.figure()
     plt.plot(*points_filter, 'go')
+    plt.axis('off')
+    plt.savefig("../FourthAxis/fig.png")
     plt.show()

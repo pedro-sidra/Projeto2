@@ -1,4 +1,5 @@
-"""This file defines the PieceRotationGUI class and the getChosenPieceRotation function. To use the GUI, just call the
+"""
+This file defines the PieceRotationGUI class and the getChosenPieceRotation function. To use the GUI, just call the
 function and read its returned value.
 
 If the return is a number, that's the angle that the figure must be rotated. If it's None, the user has cancelled.
@@ -159,9 +160,9 @@ class PieceRotationGUI:
             self.canvas.create_line([(0, i), (w, i)], tag='grid_line', fill='gray')
 
 
-def getChosenPieceRotation(piece_img_file="hex.gif"):
+def getChosenPieceRotation(piece_img_file="hex.gif", img_size=255):
     master = Tk()
-    gui = PieceRotationGUI(master, piece_img_file=piece_img_file)
+    gui = PieceRotationGUI(master, piece_img_file=piece_img_file, img_size=img_size)
     master.mainloop()
 
     print(gui.current_angle)
