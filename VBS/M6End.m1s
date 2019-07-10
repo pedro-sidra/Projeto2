@@ -1,1 +1,74 @@
-REM The default script here moves the tool back to m6start if any movement has occured during the tool change..'provavelmente inútilx = GetToolChangeStart( 0 )y = GetToolChangeStart( 1 )z = GetToolChangeStart( 2 )a = GetToolChangeStart( 3 )b = GetToolChangeStart( 4 )c = GetToolChangeStart( 5 )MsgBox "Doing Tool"Code "G30"CurrentFeed = GetOemDRO(818) 'guarda o valor do feedrate atualDoSpinStop()'----------------------------------------------------'PARAMETROS PRA MEDIR E SETAR NA HORA DO TESTE'----------------------------------------------------'EspessuraProbe = +0.2Zmax = 120    ' Até onde pode descer rápido pra tocar na probe'-----------------------------------------------------'CODIGO DE FATO'-----------------------------------------------------'Ferramenta:'-----------------------------------------------------If GetOemLed(825) <> 0 Then 'verifica se a probe ja ta no terra    MsgBox "(Erro: Probe aterrada)" 'Mostra mensagem de erroElse    Code "F300" 'feedrate pra descer     Code "G31Z-" & Zmax 'desce    While IsMoving()    Wend        Zfer = GetDro(2) 'armazena o valor medido da ferramenta    Code "G4 P2"    Code "G0 Z0" 'manda subir de volta pro zero    While IsMoving()    Wend	SetUserDRO(1001, Zfer)    Code "G4 P2"	Code "G0 X0 Y0 Z0"	While IsMoving()    Wend    Code "G92 Z"pipipipopopo não lembro as constantesEnd If'-----------------------------------------------------'Fim do script!'-----------------------------------------------------MsgBox("Referenced Tool")Sleep(1000)
+REM The default script here moves the tool back to m6start if any movement has occured during the tool change..
+
+'provavelmente inútil
+x = GetToolChangeStart( 0 )
+y = GetToolChangeStart( 1 )
+z = GetToolChangeStart( 2 )
+a = GetToolChangeStart( 3 )
+b = GetToolChangeStart( 4 )
+c = GetToolChangeStart( 5 )
+
+MsgBox "Doing Tool"
+Code "G30"
+
+CurrentFeed = GetOemDRO(818) 'guarda o valor do feedrate atual
+DoSpinStop()
+Zmax = 120    ' At� onde pode descer r�pido pra tocar na probe
+Code "G0 X0 Y70"
+While IsMoving()
+Wend
+
+'-----------------------------------------------------
+'CODIGO DE FATO
+'-----------------------------------------------------
+'Ferramenta:
+'-----------------------------------------------------
+If GetOemLed(825) <> 0 Then 'verifica se a probe ja ta no terra
+    MsgBox "(Erro: Probe aterrada)" 'Mostra mensagem de erro
+Else
+    Code "F300" 'feedrate pra descer 
+    Code "G31Z-" & Zmax 'desce
+    While IsMoving()
+    Wend
+    
+    Zfer = GetDro(2) 'armazena o valor medido da ferramenta
+    Code "G4 P2"
+    Code "G0 Z0" 'manda subir de volta pro zero
+    While IsMoving()
+    Wend
+	  
+	  SetUserDRO(1001, Zfer)
+    Code "G4 P2"
+    
+    MsgBox "Altura de encoste:" & Zfer
+    
+End If
+
+'-----------------------------------------------------
+'Fim do script!
+'-----------------------------------------------------
+
+' SE FOR QUARTO EIXO
+If GetUserLED(1203) Then
+
+MsgBox "Referenciando 4o Eixo em Z=" & -(Zfer-21.77+48.97-1)
+Code "G92 Z"& -(Zfer-21.77+48.97-1)
+
+End If
+
+' SE FOR X-Y
+If GetUserLED(1202) Then
+
+EspessuraProbe = +21.77
+DistApalpBase = -62.3539
+offset = -5
+Zzero = GetUserDRO(1001) + GetUserDRO(1002) +  EspessuraProbe - DistApalpBase + offset
+Code "G0 Z" & Zzero 'manda pra zero pra ver se deu boa
+Code "G92 Z0" 'zerou
+
+End If
+
+MsgBox("Referenced Tool")
+
+Sleep(1000)
+
