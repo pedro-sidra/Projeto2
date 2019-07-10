@@ -7,14 +7,23 @@ If the return is a number, that's the angle that the figure must be rotated. If 
 
 from tkinter import *
 from PIL import Image, ImageTk
+from Mach3.Mach3Communication import *
 
 
 class PieceRotationGUI:
 
-    def __init__(self, master, piece_img_file="hex.gif", img_size=255):
+    def __init__(self, master, piece_img_file="hex.gif", img_size=256, canvas_size=None):
+
+        # region Mach3 communication
+        self.gc = GCodeGenerator(0, output_file=r"C:\Windows\Temp\out.tap")
+        self.mc = Mach3Communication(fromMach3File=r"C:\Windows\Temp\fromMach3.txt",
+                                toMach3File=r"C:\Windows\Temp\toMach3.txt")
+        self.gc.cleanFile()
+        self.mc.clearFromMach3()
+        self.mc.clearOK()
+        # endregion
 
         self.current_angle = 0
-
         self.master = master
         master.title("Orientação da Peça")
 
@@ -23,7 +32,10 @@ class PieceRotationGUI:
         self.label = Label(master, text="Rotacione a peça como desejado e pressione 'OK' para finalizar setup.")
         self.label.pack()
 
-        self.canvas = Canvas(self.master, width=img_size, height=img_size)
+        if canvas_size is None:
+            canvas_size = img_size
+
+        self.canvas = Canvas(self.master, width=canvas_size, height=canvas_size)
         self.canvas.pack()
 
         self.loadedPilImage = Image.open(piece_img_file)
@@ -42,12 +54,15 @@ class PieceRotationGUI:
         self.newAngle_entry = Entry(master)
         self.newAngle_entry.pack()
 
-        self.apply_button = Button(master, text="Apply Angle", command=self.bnApply)
+        self.apply_button = Button(master, text="Apply Written Angle to Image", command=self.bnApply)
         self.apply_button.pack()
 
         self.labelCurrentAngle = Label(master, text=f"Current angle: {self.current_angle} deg.")
         self.label.after(50, self.__updateCurrentAngleLabel)
         self.labelCurrentAngle.pack()
+
+        self.rotate_piece = Button(master, text="Rotate piece using Mach3", command=self.bnRotate)
+        self.rotate_piece.pack()
 
         self.greet_button = Button(master, text="OK", command=self.bnOk)
         self.greet_button.pack()
@@ -75,13 +90,32 @@ class PieceRotationGUI:
 
         self.current_angle = value
 
+    def bnRotate(self):
+
+        self.mc.clearFromMach3()
+
+        # Clear the G Code file and prepare the code
+        self.gc.cleanFile()
+        self.gc.getInitialCode()
+        self.gc.writeManualCodeToFile(f'G0 A{self.current_angle}')
+        self.gc.insertNewLine()
+
+        # Starts to run G code, waits for it to execute and clears files
+        self.mc.waitForMach3()
+        self.mc.clearFromMach3()
+        self.gc.cleanFile()
+
     def bnOk(self):
 
+        self.__finishLoopMach3()
+        time.sleep(0.5)
         self.master.destroy()
 
     def bnCancel(self):
 
+        self.__finishLoopMach3()
         self.current_angle = None
+        time.sleep(0.5)
         self.master.quit()
 
     def getCurrentAngle(self):
@@ -99,6 +133,14 @@ class PieceRotationGUI:
         self.img = ImageTk.PhotoImage(self.pilImage)
         self.canvas.itemconfig(self.imgOnCanvas, image=self.img)
         self.canvas.after(50, self.__updateImageCanvas)
+
+    def __finishLoopMach3(self):
+
+        with open(self.mc.toMach3File, 'w') as fToMach3:
+            fToMach3.write('exit')
+
+        self.mc.clearFromMach3()
+        self.gc.cleanFile()
 
 
 def getChosenPieceRotation(piece_img_file="hex.gif"):
