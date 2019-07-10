@@ -8,14 +8,14 @@ import json
 import numpy as np
 from skimage.morphology import skeletonize, thin
 
-from SLCalculator import SLCalculator
+from Laser.SLCalculator import SLCalculator
 
 
 PARAMS = "params.json"
 PARAMS_LAB = "paramsLAB.json"
 
-REF_UPPER = np.array([88, 11, 255])
-REF_LOWER = np.array([33, 0, 253])
+REF_UPPER = np.array([128, 255, 206])
+REF_LOWER = np.array([52, 178, 69])
 # REF_UPPER = np.array([89, 9, 255])
 # REF_LOWER = np.array([37, 0, 207])
 
@@ -115,6 +115,8 @@ def get_mask_lab(im, calib=True):
 def get_mask(im, calib=True):
     im_HSV = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
 
+    params_init={"highH": 84, "lowH": 43, "lowS": 76, "highS": 255, "lowV": 23, "highV": 255}
+
     if not calib:
         LASER_LOWER = np.array(
             [params_init['lowH'], params_init['lowS'], params_init['lowV']])
@@ -173,9 +175,9 @@ class PieceScanner():
     def init_reference(self, ref_im):
         self.ref_im = ref_im
         # mask = cv2.inRange(cv2.cvtColor(
-        mask = get_mask(ref_im, calib=True)
-        # mask = cv2.inRange(cv2.cvtColor(
-        #     ref_im, cv2.COLOR_BGR2HSV), REF_LOWER, REF_UPPER)
+        #mask = get_mask(ref_im, calib=True)
+        mask = cv2.inRange(cv2.cvtColor(
+            ref_im, cv2.COLOR_BGR2HSV), REF_LOWER, REF_UPPER)
         mask = morphCloseThenOpen(mask)
 
         self.SL = SLCalculator(refMask=mask, ppcm=self.ppcm,
@@ -233,7 +235,7 @@ class PieceScanner():
     def add_view(self, view_img, view_angle, return_mask=False):
 
         view_img = self._applyRoi(view_img)
-        view_mask = get_mask(view_img, calib=True)
+        view_mask = get_mask(view_img, calib=False)
 
         # gray = cv2.cvtColor(view_img, cv2.COLOR_BGR2GRAY)
         # view_mask = np.zeros(gray.shape)

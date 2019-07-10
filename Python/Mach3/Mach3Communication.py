@@ -54,7 +54,7 @@ class Mach3Communication(object):
         else:
             return False
 
-    def waitForString(self, str="ok"):
+    def waitForString(self, str="ok", timeout=True):
         """
         Waits for Mach3 response till it turns 'string'. Timeout defined in COMMUNICATION_TIMEOUT constant, if not
         respected a TimeoutError exception will be raised.
@@ -74,7 +74,7 @@ class Mach3Communication(object):
             if text == str+'\n':
                 receivedOk = True
 
-            if (time.time() - t0) > COMMUNICATION_TIMEOUT:
+            if timeout and ((time.time() - t0) > COMMUNICATION_TIMEOUT):
 
                 # TODO: ADD LOGIC TO PROTECT CNC FROM MACH3. I.E. TURN MOTORS OFF ELECTRICALLY?
 

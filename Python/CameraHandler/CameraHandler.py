@@ -46,6 +46,10 @@ class CameraHandler(object):
 
         return image
 
+    def setExposure(self, exp):
+        self.videoCapture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
+        self.videoCapture.set(cv2.CAP_PROP_EXPOSURE, exp);
+
     def setResolution(self, res):
         width, height = res
         self.videoCapture.set(cv2.CAP_PROP_FRAME_WIDTH ,width);

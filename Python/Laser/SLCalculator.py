@@ -83,7 +83,7 @@ class SLCalculator:
 
         y, x = np.nonzero(mask)
 
-        pdb.set_trace()
+        #pdb.set_trace()
         points = np.vstack((x, y, np.ones_like(y)))
 
         projs = self.ref_height*self.CM@points
@@ -112,7 +112,7 @@ class SLCalculator:
 
         return xlims, eig, f
 
-    def calc_heights(self, mask, filter=True):
+    def calc_heights(self, mask, filter=False):
 
         xmin, _ = self.xlims
 

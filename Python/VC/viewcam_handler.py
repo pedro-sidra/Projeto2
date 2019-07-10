@@ -5,10 +5,15 @@ import pdb
 
 CROSSHAIR_WIDTH=5
 CROSSHAIR_COLOR=(255,0,0)
+
+CAM_PARAMS_FILE = "../CameraHandler/camera_params.npz"
+CAM_DEVICE = 0
 HEIGHT, WIDTH = 960, 1280
-cap = CameraHandlerFromFile(file="../CameraHandler/camera_params.npz",
-                            device=0,
+cap = CameraHandlerFromFile(file=CAM_PARAMS_FILE,
+                            device=CAM_DEVICE,
                             resize=(WIDTH,HEIGHT))
+cap.setExposure(-6)
+
 i = 0
 
 x_mouse = 0

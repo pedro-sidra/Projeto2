@@ -74,4 +74,6 @@ def getPicsForAngles():
     print(f'\nDONE! Matching pictures saved in {OUTPUT_FOLDER}outputRelation.txt.')
     # endregion
 
-getPicsForAngles()
+
+if __name__=="__main__":
+    getPicsForAngles()

@@ -19,7 +19,12 @@ PIXELS_PER_CM = 2*29
 # Y -> coordenada que é alterada quando uma peça impede o caminho do laser
 # Se quando H aumenta, y aumenta -> TAN_LASER_ANGLE negativo
 # Se quando H aumenta, y diminui -> TAN_LASER_ANGLE positivo
-TAN_LASER_ANGLE = -26.2/23
+#TAN_LASER_ANGLE = -26.2/23
+TAN_LASER_ANGLE = -6.5/5.85
+
+P_AXIS_CENTER = [360*2, 341*2]
+AXIS_HEIGHT = 48.97
+CAM_HEIGHT = 411.42
 
 PARAMS = 'params.json'
 
@@ -124,27 +129,26 @@ def meanFilter(vec, w=2):
     return v
 
 
-if __name__ == "__main__":
-    args = parseArgs()
-    loader = ImageLoader("../CameraHandler/camera_params.npz",
-                        resize=(1280,960))
+def calc4Axis(reference, pieces, plot_each=False):
+    loader = ImageLoader("CameraHandler/camera_params.npz",
+                         resize=(1280,960))
 
-    ref_im = loader.get_img(args.reference)
+    ref_im = loader.get_img(reference)
 
     scanner = PieceScanner(ppcm=PIXELS_PER_CM,
                            tanLaserAngle=TAN_LASER_ANGLE,
-                           axisCenter=([702, 790], 48.97),
-                           ref_height=405.64,
+                           axisCenter=(P_AXIS_CENTER, AXIS_HEIGHT),
+                           ref_height=CAM_HEIGHT,
                            # teste: axisCenter=(2*346, 75),
                            CM=loader.get_mtx())
 
     scanner.init_reference(ref_im)
     scanner.show_reference()
 
-    im0 = loader.get_img(args.pieces[0])
+    im0 = loader.get_img(pieces[0])
     scanner.get_roi(im0)
 
-    for piece in args.pieces:
+    for piece in pieces:
         piece_im = loader.get_img(piece)
 
         angle = os.path.splitext(piece)[0].split("pic")[-1]
@@ -152,7 +156,7 @@ if __name__ == "__main__":
 
         x, heights, mask = scanner.add_view(piece_im, angle, return_mask=True)
 
-        if args.plot_each:
+        if plot_each:
             fig, axs = plt.subplots(1, 2)
             piece_im[mask != 0] = (0, 0, 0)
             axs[0].imshow(piece_im)
@@ -162,6 +166,7 @@ if __name__ == "__main__":
             plt.show()
 
     points = scanner.get_piece()
+    plt.axes().set_aspect('equal', 'datalim')
     plt.figure()
     plt.plot(*points, 'go')
     plt.show()
@@ -184,7 +189,12 @@ if __name__ == "__main__":
         points_filter[:, i] = np.array([xf, yf])
 
     plt.figure()
+    plt.axes().set_aspect('equal', 'datalim')
     plt.plot(*points_filter, 'go')
     plt.axis('off')
-    plt.savefig("../FourthAxis/fig.png")
+    plt.savefig("fig.png")
     plt.show()
+
+if __name__ == "__main__":
+    args = parseArgs()
+    calc4Axis(args.reference, args.pieces, args.plot_each)

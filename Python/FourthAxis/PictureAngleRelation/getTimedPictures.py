@@ -21,6 +21,10 @@ DEFAULT_TIME_BETWEEN_PICS_S = 0.2
 MACH3_ANGLES_FILE = './TimedAngles/angle.txt'
 random.seed()
 
+CAM_PARAMS_FILE = "CameraHandler/camera_params.npz"
+CAM_DEVICE=0
+HEIGHT, WIDTH = 960, 1280
+
 # endregion
 
 def getSecondsOfTheDay() -> float:
@@ -66,7 +70,10 @@ def getTimedPictures(n_of_samples=DEFAULT_N_OF_SAMPLE,
                      folder_of_pic=None) -> tuple:
 
     # Prepares Camera. It's possible to change here for a specific camera instead of using a generic CameraHandler.
-    ch = CameraHandler(startup_cam=True)
+    ch = CameraHandlerFromFile(file=CAM_PARAMS_FILE,
+                                device=CAM_DEVICE,
+                                resize=(WIDTH,HEIGHT))
+    ch.setExposure(0)
 
     mc = Mach3Communication(fromMach3File=r"C:\Windows\Temp\fromMach3.txt",
                             toMach3File=r"C:\Windows\Temp\toMach3.txt")
@@ -102,7 +109,7 @@ def getTimedPictures(n_of_samples=DEFAULT_N_OF_SAMPLE,
     lastSimulatedAngle = 0
 
     print("Waiting for mach3...")
-    mc.waitForString(str="go")
+    mc.waitForString(str="go", timeout=False)
     print("Got GO signal, starting loop...")
     count = 0
 
