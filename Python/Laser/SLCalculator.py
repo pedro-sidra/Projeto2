@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import pdb
 
-TEST_H = 332
+TEST_H = 405.64
 import matplotlib.pyplot as plt
 
 
@@ -25,7 +25,8 @@ class SLCalculator:
                  ppcm,
                  tanLaserAngle,
                  axisCenter=(0, 0),
-                 CM=None
+                 CM=None,
+                 ref_height=TEST_H,
                  ):
 
         # Init reference line params:
@@ -35,6 +36,8 @@ class SLCalculator:
 
         self.CM = np.linalg.inv(CM)
         self.axisCenter = axisCenter
+
+        self.ref_height = ref_height
 
         self.xlims, self.eig, (self.f, self.lineParams) = self._init_reference(
             refMask)
@@ -83,7 +86,7 @@ class SLCalculator:
         pdb.set_trace()
         points = np.vstack((x, y, np.ones_like(y)))
 
-        projs = TEST_H*self.CM@points
+        projs = self.ref_height*self.CM@points
 
         pca_points = projs[:2].swapaxes(0,1).astype('float32')
 
@@ -98,7 +101,10 @@ class SLCalculator:
         proj_rect = (eig)@(projs[:2])
 
         self.y_ref = np.mean(proj_rect[1])
-        self.x_ref, _= (TEST_H-(105))*eig@((self.CM@np.array([self.axisCenter[0],0,1]))[:2])
+
+        Pcenter, hcenter = self.axisCenter
+
+        self.x_ref, _= (self.ref_height-(hcenter))*eig@((self.CM@np.array([*Pcenter,1]))[:2])
 
 
         xlims = (np.min(x), np.max(x))
@@ -124,13 +130,10 @@ class SLCalculator:
         projected_piece_points = (self.eig)@projected_piece_points
         xh, yh = projected_piece_points
 
-        z = (TEST_H - self.tanAlfa*self.y_ref)/(1-self.tanAlfa*yh)
+        z = (self.ref_height - self.tanAlfa*self.y_ref)/(1-self.tanAlfa*yh)
 
         x = +xh*z - self.x_ref
-        h = TEST_H - z
-
-        # projected_piece_points[1, :] *= self.heightFactor
-        # projected_piece_points[0, :] /= self.ppcm
+        h = self.ref_height - z
 
         if filter:
             x, heights = projected_piece_points
