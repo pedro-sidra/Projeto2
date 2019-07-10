@@ -5,7 +5,7 @@ import argparse
 import json
 import numpy as np
 
-from PieceScanner import PieceScanner
+from Laser.PieceScanner import PieceScanner
 
 REF_PHOTO = "/home/estudos/Pictures/Projeto2/TesteLaser/ref.jpg"
 PIECE_PHOTO = "/home/estudos/Pictures/Projeto2/TesteLaser/inclinadoBorr.jpg"

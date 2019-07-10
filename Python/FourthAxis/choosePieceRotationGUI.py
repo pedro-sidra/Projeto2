@@ -169,4 +169,5 @@ def getChosenPieceRotation(piece_img_file="hex.gif"):
     return gui.current_angle
 
 
-# getChosenPieceRotation(piece_img_file="hex.gif")
+if __name__=="__main__":
+    getChosenPieceRotation(piece_img_file="curriculo.jpg")
