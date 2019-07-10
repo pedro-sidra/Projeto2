@@ -169,4 +169,4 @@ def getChosenPieceRotation(piece_img_file="hex.gif"):
     return gui.current_angle
 
 
-getChosenPieceRotation(piece_img_file="hex.gif")
+# getChosenPieceRotation(piece_img_file="hex.gif")
