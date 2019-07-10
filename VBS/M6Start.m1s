@@ -1,0 +1,31 @@
+'esse código é executado quando é chamado o código M6. Ao finalizar,
+'o spindle irá parar e a máquina travará até ser pressionado o botão cycle start,
+'possibilitando a troca manual da ferramenta
+
+tool = GetSelectedTool()
+SetCurrentTool( tool )
+  
+
+' ----------------------------FAZENDO HOME--------------------------------------
+MsgBox "Doing Home"
+DoButton( 24 )
+DoButton( 23 )
+DoButton( 22 )
+DoButton( 25 )
+
+DoOEMButton(133)
+DoOEMButton(134)
+DoOEMButton(135)
+x = getOEMDRO(83)
+While x <>0
+	x = getOEMDRO(83)
+Wend
+While IsMoving()
+Wend
+Code "G92 X0 Y0 Z0"
+Sleep(1000)
+
+'Posição em que ocorrerá a troca da ferramenta
+Code "G0 X0 Y0 Z0" 
+MsgBox "Manually switch the tool and then press the cycle start button"
+
