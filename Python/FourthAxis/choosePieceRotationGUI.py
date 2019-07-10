@@ -9,6 +9,8 @@ from tkinter import *
 from PIL import Image, ImageTk
 from Mach3.Mach3Communication import *
 
+GRID_LINE_STEP = 10
+
 
 class PieceRotationGUI:
 
@@ -36,7 +38,7 @@ class PieceRotationGUI:
             canvas_size = img_size
 
         self.canvas = Canvas(self.master, width=canvas_size, height=canvas_size)
-        self.canvas.pack()
+        self.canvas.pack(expand=False)
 
         self.loadedPilImage = Image.open(piece_img_file)
         self.pilImage = self.loadedPilImage.rotate(0)
@@ -44,6 +46,7 @@ class PieceRotationGUI:
 
         self.imgOnCanvas = self.canvas.create_image(img_size / 2, img_size / 2, anchor=CENTER, image=self.img)
         self.canvas.after(50, self.__updateImageCanvas)
+        self.canvas.bind('<Configure>', self.__create_grid)
 
         self.rotPlus_button = Button(master, text="+", command=self.bnPlus)
         self.rotPlus_button.pack()
@@ -142,6 +145,19 @@ class PieceRotationGUI:
         self.mc.clearFromMach3()
         self.gc.cleanFile()
 
+    def __create_grid(self, event=None):
+        w = self.canvas.winfo_width()  # Get current width of canvas
+        h = self.canvas.winfo_height()  # Get current height of canvas
+        self.canvas.delete('grid_line')  # Will only remove the grid_line
+
+        # Creates all vertical lines at intevals of GRID_LINE_STEP
+        for i in range(0, w, GRID_LINE_STEP):
+            self.canvas.create_line([(i, 0), (i, h)], tag='grid_line', fill='gray')
+
+        # Creates all horizontal lines at intevals of GRID_LINE_STEP
+        for i in range(0, h, GRID_LINE_STEP):
+            self.canvas.create_line([(0, i), (w, i)], tag='grid_line', fill='gray')
+
 
 def getChosenPieceRotation(piece_img_file="hex.gif"):
     master = Tk()
@@ -153,4 +169,4 @@ def getChosenPieceRotation(piece_img_file="hex.gif"):
     return gui.current_angle
 
 
-# getChosenPieceRotation(piece_img_file="hex.gif")
+getChosenPieceRotation(piece_img_file="hex.gif")
